@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { FileText, Plus, Trash2 } from 'lucide-vue-next'
-import { deleteBulletin, listBulletins } from '../store'
+import { deleteBulletin, listBulletins, seedIfEmpty } from '../store'
 
 const bulletins = ref(listBulletins())
+onMounted(async () => {
+  await seedIfEmpty()
+  bulletins.value = listBulletins()
+})
 
 const fmt = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' })
 
