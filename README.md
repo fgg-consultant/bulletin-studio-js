@@ -17,6 +17,8 @@ npm run build
 Routing par hash (compatible GitHub Pages) : `#/` dashboard (liste, ouverture, suppression),
 `#/new` choix d'un template de départ, `#/b/<id>` éditeur. Un bulletin par clé
 `bs-doc:<id>` dans le localStorage (l'ancienne clé mono-document est migrée automatiquement).
+Au premier chargement, si la liste est vide, un bulletin d'exemple
+(`public/default-bulletin.json`) est proposé — une seule fois (drapeau `bs-seeded`).
 
 ## Modèle de données
 

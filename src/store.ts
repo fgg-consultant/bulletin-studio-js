@@ -101,6 +101,27 @@ export function openBulletin(id: string): boolean {
   }
 }
 
+// bulletin d'exemple embarqué (public/default-bulletin.json) : proposé une seule fois quand la liste est vide
+export async function seedIfEmpty() {
+  if (localStorage.getItem('bs-seeded')) return
+  if (listBulletins().length > 0) {
+    localStorage.setItem('bs-seeded', '1')
+    return
+  }
+  try {
+    const r = await fetch(import.meta.env.BASE_URL + 'default-bulletin.json')
+    if (!r.ok) return
+    const d = await r.json()
+    localStorage.setItem(
+      PREFIX + uid(),
+      JSON.stringify({ title: d.title, blocks: d.blocks, updatedAt: Date.now() }),
+    )
+    localStorage.setItem('bs-seeded', '1')
+  } catch {
+    /* hors-ligne : on retentera au prochain chargement */
+  }
+}
+
 export function createBulletin(blocks: Block[], title = 'Nouveau bulletin'): string {
   const id = uid()
   localStorage.setItem(PREFIX + id, JSON.stringify({ title, blocks, updatedAt: Date.now() }))
