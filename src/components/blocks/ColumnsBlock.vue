@@ -8,10 +8,11 @@ const BlockRenderer = defineAsyncComponent(() => import('../BlockRenderer.vue'))
 
 defineProps<{ block: ColumnsBlock; selected: boolean }>()
 
-// pas de colonnes dans des colonnes
+// pas de colonnes dans des colonnes, ni de header (bandeau pleine largeur = niveau page)
 const group = {
   name: 'blocks',
-  put: (_to: unknown, _from: unknown, el: HTMLElement) => el.dataset.blockType !== 'columns',
+  put: (_to: unknown, _from: unknown, el: HTMLElement) =>
+    el.dataset.blockType !== 'columns' && el.dataset.blockType !== 'header',
 }
 </script>
 
