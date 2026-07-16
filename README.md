@@ -12,6 +12,12 @@ npm run dev      # http://localhost:5173
 npm run build
 ```
 
+## Navigation
+
+Routing par hash (compatible GitHub Pages) : `#/` dashboard (liste, ouverture, suppression),
+`#/new` choix d'un template de départ, `#/b/<id>` éditeur. Un bulletin par clé
+`bs-doc:<id>` dans le localStorage (l'ancienne clé mono-document est migrée automatiquement).
+
 ## Modèle de données
 
 Le document est un arbre de blocs (`src/types.ts`) :
@@ -39,6 +45,9 @@ Block = header { eyebrow, title, subtitle, badges[], bg }
 src/
   store.ts                  état réactif du doc + sélection + helpers (remove/duplicate/export)
   components/
+    Dashboard.vue           liste des bulletins (ouvrir / supprimer / créer)
+    TemplateChooser.vue     points de départ (templates définis dans src/templates.ts)
+    Editor.vue              coquille de l'éditeur (topbar + sidebar + canvas)
     Sidebar.vue             palette de blocs (clic = ajout à la fin, drag = dépôt ciblé)
     Canvas.vue              la page en construction
     BlockRenderer.vue       cadre commun d'un bloc (sélection, déplacer/dupliquer/supprimer)
