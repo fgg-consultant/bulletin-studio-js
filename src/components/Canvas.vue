@@ -18,7 +18,7 @@ const widths = { desktop: 'max-w-[980px]', pdf: 'max-w-[770px]', mobile: 'max-w-
           handle=".drag-handle"
           ghost-class="drag-ghost"
           :animation="150"
-          class="min-h-[70vh] space-y-1 p-8"
+          class="bs-body min-h-[70vh] space-y-1"
         >
           <template #item="{ element }">
             <BlockRenderer :block="element" />

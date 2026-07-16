@@ -114,6 +114,34 @@
   background-image: repeating-linear-gradient(45deg, #e2e8f0 0 6px, transparent 6px 12px);
 }
 
+/* ---- marges de page ----
+   corps : petite marge ; header : pleine largeur (marge zéro) ; mobile : aucune marge */
+.bs-canvas {
+  --pad-x: 1.25rem;
+  --pad-y: 1.25rem;
+}
+.bs-mode-mobile {
+  --pad-x: 0px;
+  --pad-y: 0px;
+}
+.bs-body {
+  padding: var(--pad-y) var(--pad-x);
+}
+.bs-body > [data-block-type='header'] {
+  padding: 0;
+  margin-inline: calc(-1 * var(--pad-x));
+}
+.bs-body > [data-block-type='header']:first-child {
+  margin-top: calc(-1 * var(--pad-y));
+}
+.bs-body > [data-block-type='header'] .bs-header {
+  border-radius: 0;
+}
+/* en premier bloc, le header épouse les coins arrondis de la page */
+.bs-body > [data-block-type='header']:first-child .bs-header {
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
 /* ---- colonnes responsives selon le mode d'aperçu ----
    desktop : toutes les colonnes sur une ligne
    pdf     : 2 colonnes max (les rangées de 3+ passent à la ligne)
@@ -159,9 +187,15 @@
     border-radius: 0;
     box-shadow: none;
   }
+  .bs-canvas {
+    --pad-x: 12mm;
+    --pad-y: 10mm;
+  }
   .bs-page > * {
     min-height: 0 !important;
-    padding: 10mm 12mm;
+  }
+  .bs-body > [data-block-type='header'] .bs-header {
+    border-radius: 0 !important;
   }
   .bs-cols-many > * {
     flex-basis: calc(50% - 0.375rem) !important;

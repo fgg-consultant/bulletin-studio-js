@@ -27,7 +27,7 @@ function edit(e: Event, key: 'eyebrow' | 'title' | 'subtitle') {
 
 <template>
   <div
-    class="rounded-lg px-8 py-9 transition-colors"
+    class="bs-header rounded-lg px-8 py-9 transition-colors"
     :class="dark ? 'text-white' : 'text-slate-900'"
     :style="{ backgroundColor: block.bg }"
   >
