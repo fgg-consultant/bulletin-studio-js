@@ -106,6 +106,11 @@ const ar: Catalog = {
     altLabel: 'النص البديل للصورة',
     replace: 'استبدال',
     remove: 'إزالة',
+    library: 'المكتبة',
+    search: 'البحث عن صورة…',
+    uploading: 'جارٍ الرفع…',
+    noImages: 'لم يتم العثور على أي صورة',
+    cancel: 'إلغاء',
   },
   button: { href: 'رابط الزر', hrefPlaceholder: 'https://rabit-azzir…' },
   table: {

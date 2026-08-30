@@ -105,6 +105,11 @@ const fr: Catalog = {
     altLabel: 'Texte alternatif de l’image',
     replace: 'Remplacer',
     remove: 'Retirer',
+    library: 'Bibliothèque',
+    search: 'Rechercher une image…',
+    uploading: 'Téléversement…',
+    noImages: 'Aucune image trouvée',
+    cancel: 'Annuler',
   },
   button: { href: 'Lien du bouton', hrefPlaceholder: 'https://lien-du-bouton…' },
   table: {

@@ -53,6 +53,8 @@ export interface ImageBlock {
   id: string
   type: 'image'
   src: string | null
+  /** image de la bibliothèque climweb ; absent pour une URL externe ou un vieux doc */
+  imageId?: number | null
   alt: string
   caption: string
 }

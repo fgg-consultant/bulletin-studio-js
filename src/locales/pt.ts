@@ -105,6 +105,11 @@ const pt: Catalog = {
     altLabel: 'Texto alternativo da imagem',
     replace: 'Substituir',
     remove: 'Remover',
+    library: 'Biblioteca',
+    search: 'Procurar uma imagem…',
+    uploading: 'A carregar…',
+    noImages: 'Nenhuma imagem encontrada',
+    cancel: 'Cancelar',
   },
   button: { href: 'Ligação do botão', hrefPlaceholder: 'https://ligacao-do-botao…' },
   table: {

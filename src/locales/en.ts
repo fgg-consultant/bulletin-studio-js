@@ -108,6 +108,11 @@ const en = {
     altLabel: 'Image alt text',
     replace: 'Replace',
     remove: 'Remove',
+    library: 'Library',
+    search: 'Search images…',
+    uploading: 'Uploading…',
+    noImages: 'No image found',
+    cancel: 'Cancel',
   },
   button: {
     href: 'Button link',

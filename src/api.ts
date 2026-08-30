@@ -6,6 +6,7 @@ const mount = document.getElementById('bulletin-studio-app')
 
 const API = mount?.dataset.apiUrl ?? ''
 const PRODUCT_PAGES = mount?.dataset.productPagesUrl ?? ''
+const IMAGES = mount?.dataset.imagesUrl ?? ''
 const CSRF = mount?.dataset.csrfToken ?? ''
 
 export interface BulletinMeta {
@@ -32,15 +33,17 @@ export interface ProductPage {
   title: string
 }
 
+async function fail(res: Response): Promise<never> {
+  const detail = await res.json().catch(() => null)
+  throw new Error(detail?.error ?? `${res.status} ${res.statusText}`)
+}
+
 async function call<T>(url: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(url, {
     ...init,
     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF, ...init.headers },
   })
-  if (!res.ok) {
-    const detail = await res.json().catch(() => null)
-    throw new Error(detail?.error ?? `${res.status} ${res.statusText}`)
-  }
+  if (!res.ok) await fail(res)
   return res.status === 204 ? (undefined as T) : res.json()
 }
 
@@ -69,3 +72,28 @@ export const publish = (id: number) =>
   call<BulletinMeta>(`${API}${id}/publish/`, { method: 'POST' })
 
 export const remove = (id: number) => call<void>(`${API}${id}/`, { method: 'DELETE' })
+
+/** Une image de la bibliothèque climweb. `url` est une rendition, pas l'original :
+ *  une photo de 4000 px n'a rien à faire dans une page publiée. */
+export interface StoredImage {
+  id: number
+  title: string
+  url: string
+  width: number
+  height: number
+  thumb: string
+  alt: string
+}
+
+export const listImages = (q = '') =>
+  call<StoredImage[]>(IMAGES + (q ? `?q=${encodeURIComponent(q)}` : ''))
+
+export async function uploadImage(file: File): Promise<StoredImage> {
+  const body = new FormData()
+  body.append('title', file.name.replace(/\.[^.]+$/, ''))
+  body.append('file', file)
+  // pas de Content-Type ici : le navigateur doit poser lui-même la frontière multipart
+  const res = await fetch(IMAGES, { method: 'POST', body, headers: { 'X-CSRFToken': CSRF } })
+  if (!res.ok) await fail(res)
+  return res.json()
+}

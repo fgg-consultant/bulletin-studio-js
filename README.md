@@ -64,8 +64,10 @@ Block = header { eyebrow, title, subtitle, badges[], bg }
   en-têtes/pieds injectés par le navigateur ; la respiration vient d'un padding en mm.
 - 3 modes d'aperçu : desktop (980 px, colonnes libres), pdf (770 px, 2 colonnes max — les
   rangées de 3+ se replient), mobile (420 px, tout empilé).
-- Les images uploadées sont stockées en dataURL dans le document — à remplacer par un
-  upload vers les images Wagtail.
+- Les images passent par la bibliothèque climweb (`api/images/`) : le bloc image
+  téléverse le fichier, reçoit l'url d'une rendition et ne garde que cette url et l'id.
+  Le bouton « Bibliothèque » repioche une image déjà présente sur le site. Coller une URL
+  externe reste possible — le bulletin dépendra alors de ce domaine.
 
 ## Structure
 
