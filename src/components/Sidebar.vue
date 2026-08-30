@@ -5,6 +5,7 @@ import {
   Calendar,
   Heading1,
   Image as ImageIcon,
+  Map as MapIcon,
   Minus,
   MousePointerClick,
   MoveVertical,
@@ -46,6 +47,16 @@ const content: PaletteItem[] = [
   },
   { key: 'heading', label: t('sidebar.heading'), type: 'text', icon: Heading1, create: () => ({ id: uid(), type: 'text', preset: 'heading', state: null }) },
   { key: 'text', label: t('sidebar.text'), type: 'text', icon: Type, create: () => ({ id: uid(), type: 'text', preset: 'text', state: null }) },
+  {
+    key: 'map',
+    label: t('sidebar.map'),
+    type: 'map',
+    icon: MapIcon,
+    create: () => ({
+      id: uid(), type: 'map', layerId: null, layerTitle: '', tiles: null,
+      time: null, legend: null, bounds: null, height: 'md',
+    }),
+  },
   { key: 'image', label: t('sidebar.image'), type: 'image', icon: ImageIcon, create: () => ({ id: uid(), type: 'image', src: null, alt: '', caption: '' }) },
   { key: 'button', label: t('sidebar.button'), type: 'button', icon: MousePointerClick, create: () => ({ id: uid(), type: 'button', label: t('defaults.button'), href: '', align: 'center' }) },
   {

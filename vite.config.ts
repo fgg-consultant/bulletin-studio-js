@@ -15,7 +15,12 @@ export default defineConfig({
     rollupOptions: {
       // deux entrées : l'app d'édition, et la feuille de contenu seule — c'est
       // elle que le gabarit django charge sur la page publiée du bulletin.
-      input: { app: './index.html', content: './src/content.css' },
+      input: {
+        app: './index.html',
+        content: './src/content.css',
+        // l'hydratation des cartes sur la page publiée du bulletin
+        embed: './src/embed.ts',
+      },
       output: {
         // noms stables : le template django les charge via {% static %}
         entryFileNames: (chunk) =>

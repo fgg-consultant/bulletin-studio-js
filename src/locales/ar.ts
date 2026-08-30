@@ -76,6 +76,7 @@ const ar: Catalog = {
     heading: 'عنوان',
     text: 'نص',
     image: 'صورة',
+    map: 'خريطة',
     button: 'زر',
     table: 'جدول',
     date: 'تاريخ',
@@ -122,6 +123,15 @@ const ar: Catalog = {
   },
   date: { label: 'تاريخ الكتلة', pick: 'اختر تاريخًا' },
   text: { heading: 'عنوان القسم', body: 'اكتب نصك…' },
+  map: {
+    frame: 'تأطير هنا',
+    frameHint: 'تثبيت الإطار الحالي للنشرة المنشورة',
+    chooseLayer: 'اختيار طبقة',
+    changeLayer: 'تغيير الطبقة',
+    loading: 'جارٍ التحميل…',
+    date: 'تاريخ الخريطة',
+    noGeomanager: 'Geomanager غير متاح على هذا الموقع.',
+  },
   toolbar: {
     paragraph: 'فقرة',
     h1: 'عنوان 1',

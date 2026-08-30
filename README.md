@@ -69,6 +69,21 @@ Block = header { eyebrow, title, subtitle, badges[], bg }
   Le bouton « Bibliothèque » repioche une image déjà présente sur le site. Coller une URL
   externe reste possible — le bulletin dépendra alors de ce domaine.
 
+## Cartes
+
+Le bloc carte choisit une couche raster dans le catalogue geomanager (`api/datasets/`) :
+pas de `DashboardMap` à configurer au préalable. Choisir une couche fige dans le document
+le chemin de ses tuiles, **sa date** et sa légende — un numéro archivé doit continuer
+d'afficher les données de sa décade, et les tuiles raster de geomanager exigent de toute
+façon un paramètre `time`. « Cadrer ici » fige le cadrage courant.
+
+Sur la page publiée, chaque carte n'est qu'un `<div class="bs-map" data-tiles data-time
+data-bounds>` : `src/embed.ts` (une seconde entrée de build, quelques centaines d'octets)
+l'anime avec `src/map.ts`, le **même** code que l'éditeur. maplibre n'est pas empaqueté —
+climweb en sert un en global, chargé aussi bien par la page d'admin que par la page
+publique, donc jamais deux versions. La légende, elle, est du HTML statique : elle
+s'imprime et ne dépend d'aucun script.
+
 ## Structure
 
 ```
@@ -76,6 +91,8 @@ src/
   api.ts                    client du store climweb (product-pages, CRUD, publish)
   store.ts                  état réactif du doc + sélection + helpers (remove/duplicate/export)
   render.ts                 document → HTML publié
+  map.ts                    rendu d'une carte, partagé éditeur / page publiée
+  embed.ts                  hydratation des cartes sur la page publiée
   lexical.ts                thème et nœuds Lexical partagés éditeur / rendu
   content.css               styles du contenu (éditeur + page publiée)
   components/

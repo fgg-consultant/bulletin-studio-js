@@ -1,5 +1,8 @@
+import type { Legend } from './map'
+
 export type BlockType =
   | 'header'
+  | 'map'
   | 'text'
   | 'image'
   | 'button'
@@ -85,6 +88,22 @@ export interface ColumnsBlock {
   columns: Block[][]
 }
 
+export interface MapBlock {
+  id: string
+  type: 'map'
+  /** couche raster geomanager */
+  layerId: string | null
+  layerTitle: string
+  /** chemin des tuiles, avec {z}/{x}/{y} */
+  tiles: string | null
+  /** date figée à la composition — un numéro archivé garde ses données */
+  time: string | null
+  /** figée elle aussi : le style de la couche peut changer après publication */
+  legend: Legend | null
+  bounds: number[] | null
+  height: 'sm' | 'md' | 'lg'
+}
+
 export type Block =
   | HeaderBlock
   | TextBlock
@@ -95,3 +114,4 @@ export type Block =
   | DividerBlock
   | SpacerBlock
   | ColumnsBlock
+  | MapBlock

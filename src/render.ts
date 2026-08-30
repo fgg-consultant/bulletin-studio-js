@@ -7,11 +7,10 @@
 import { $generateHtmlFromNodes } from '@lexical/html'
 import { $getRoot, createEditor } from 'lexical'
 import { formatDate } from './i18n'
+import { esc } from './esc'
 import { nodes, theme } from './lexical'
+import { legendHtml, MAP_HEIGHTS } from './map'
 import type { Block } from './types'
-
-const ESC: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }
-const esc = (s: string) => String(s ?? '').replace(/[&<>"]/g, (c) => ESC[c]!)
 
 /** état Lexical sérialisé → HTML. L'éditeur jetable partage le thème et les nœuds
  *  des blocs texte : mêmes classes en sortie qu'à la saisie. */
@@ -86,6 +85,20 @@ function block(b: Block): string {
       const d = new Date(b.date + 'T00:00:00')
       if (isNaN(d.getTime())) return ''
       return `<div class="bs-date" style="text-align:${esc(b.align)}">${esc(formatDate(d))}</div>`
+    }
+    case 'map': {
+      if (!b.tiles) return ''
+      // un marqueur déclaratif, jamais de script : le bundle d'hydratation lit ces
+      // attributs sur la page publiée. La légende, elle, est déjà du HTML — elle
+      // s'imprime et ne dépend de rien.
+      const attrs = [
+        `data-tiles="${esc(b.tiles)}"`,
+        b.time ? `data-time="${esc(b.time)}"` : '',
+        b.bounds?.length === 4 ? `data-bounds="${esc(b.bounds.join(','))}"` : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+      return `<div class="bs-map-block"><div class="bs-map" ${attrs} style="height:${MAP_HEIGHTS[b.height]}"></div>${legendHtml(b.legend)}</div>`
     }
     case 'divider':
       return '<hr class="bs-divider">'

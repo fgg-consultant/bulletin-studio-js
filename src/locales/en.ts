@@ -78,6 +78,7 @@ const en = {
     heading: 'Heading',
     text: 'Text',
     image: 'Image',
+    map: 'Map',
     button: 'Button',
     table: 'Table',
     date: 'Date',
@@ -132,6 +133,15 @@ const en = {
   text: {
     heading: 'Section heading',
     body: 'Type your text…',
+  },
+  map: {
+    frame: 'Frame here',
+    frameHint: 'Freeze the current framing for the published bulletin',
+    chooseLayer: 'Choose a layer',
+    changeLayer: 'Change layer',
+    loading: 'Loading…',
+    date: 'Map date',
+    noGeomanager: 'Geomanager is not available on this site.',
   },
   toolbar: {
     paragraph: 'Paragraph',

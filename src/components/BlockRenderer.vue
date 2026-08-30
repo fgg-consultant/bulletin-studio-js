@@ -9,6 +9,7 @@ import DateBlock from './blocks/DateBlock.vue'
 import DividerBlock from './blocks/DividerBlock.vue'
 import HeaderBlock from './blocks/HeaderBlock.vue'
 import ImageBlock from './blocks/ImageBlock.vue'
+import MapBlock from './blocks/MapBlock.vue'
 import SpacerBlock from './blocks/SpacerBlock.vue'
 import TableBlock from './blocks/TableBlock.vue'
 import TextBlock from './blocks/TextBlock.vue'
@@ -22,6 +23,7 @@ const comps: Record<Block['type'], Component> = {
   header: HeaderBlock,
   text: TextBlock,
   image: ImageBlock,
+  map: MapBlock,
   button: ButtonBlock,
   table: TableBlock,
   date: DateBlock,

@@ -75,6 +75,7 @@ const pt: Catalog = {
     heading: 'Título',
     text: 'Texto',
     image: 'Imagem',
+    map: 'Mapa',
     button: 'Botão',
     table: 'Tabela',
     date: 'Data',
@@ -121,6 +122,15 @@ const pt: Catalog = {
   },
   date: { label: 'Data do bloco', pick: 'Escolha uma data' },
   text: { heading: 'Título de secção', body: 'Escreva o seu texto…' },
+  map: {
+    frame: 'Enquadrar aqui',
+    frameHint: 'Fixa o enquadramento atual para o boletim publicado',
+    chooseLayer: 'Escolher uma camada',
+    changeLayer: 'Mudar de camada',
+    loading: 'A carregar…',
+    date: 'Data do mapa',
+    noGeomanager: 'O Geomanager não está disponível neste site.',
+  },
   toolbar: {
     paragraph: 'Parágrafo',
     h1: 'Título 1',

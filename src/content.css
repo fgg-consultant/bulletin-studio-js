@@ -229,3 +229,63 @@
     flex-basis: 100%;
   }
 }
+
+/* ---- cartes ----
+   Non scopées : la carte et sa légende s'affichent aussi dans l'éditeur, qui
+   n'a pas le conteneur `.bs-doc`. */
+.bs-map {
+  width: 100%;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  background: #0f172a;
+}
+.bs-doc .bs-map-block {
+  margin: 1rem 0;
+}
+.bs-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #475569;
+}
+.bs-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.bs-legend-item i {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 2px;
+}
+.bs-legend-units {
+  margin-left: auto;
+  font-style: italic;
+}
+/* échelle continue : une barre plutôt que des pastilles */
+.bs-legend-scale {
+  display: block;
+}
+.bs-legend-bar {
+  display: flex;
+  height: 0.55rem;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.bs-legend-step {
+  flex: 1;
+}
+.bs-legend-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+}
+.bs-legend-label {
+  flex: 1;
+  text-align: center;
+  font-size: 0.7rem;
+}

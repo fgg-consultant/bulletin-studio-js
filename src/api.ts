@@ -7,6 +7,7 @@ const mount = document.getElementById('bulletin-studio-app')
 const API = mount?.dataset.apiUrl ?? ''
 const PRODUCT_PAGES = mount?.dataset.productPagesUrl ?? ''
 const IMAGES = mount?.dataset.imagesUrl ?? ''
+const MAP_CONFIG = mount?.dataset.mapConfigUrl ?? ''
 const CSRF = mount?.dataset.csrfToken ?? ''
 
 export interface BulletinMeta {
@@ -97,3 +98,45 @@ export async function uploadImage(file: File): Promise<StoredImage> {
   if (!res.ok) await fail(res)
   return res.json()
 }
+
+/** Ce dont une carte a besoin et qui ne vient pas du bulletin : où geomanager sert
+ *  son catalogue, les frontières administratives du site, le cadrage par défaut. */
+export interface MapConfig {
+  datasetsUrl: string | null
+  boundaryTilesUrl: string | null
+  bounds: number[] | null
+}
+
+export const mapConfig = () => call<MapConfig>(MAP_CONFIG)
+
+export interface GeoLayer {
+  id: string
+  name: string
+  dataset: string
+  tileJsonUrl: string
+  legendConfig?: unknown
+}
+
+/** geomanager rend ses urls absolues à partir du Site wagtail, dont l'hôte et le
+ *  port sont souvent faux en dev. Tout vit sur la même origine : on ne garde que
+ *  le chemin. */
+export const samePath = (url: string) =>
+  // URL() échappe les accolades ; les gabarits {z}/{x}/{y} doivent rester lisibles
+  new URL(url, location.origin).pathname.replace(/%7B/gi, '{').replace(/%7D/gi, '}')
+
+/** Les couches raster du catalogue geomanager, à plat. */
+export async function listLayers(datasetsUrl: string): Promise<GeoLayer[]> {
+  const datasets = await call<{ name?: string; layers?: GeoLayer[] }[]>(datasetsUrl)
+  return datasets.flatMap((d) =>
+    (d.layers ?? [])
+      .filter((l) => l.tileJsonUrl)
+      .map((l) => ({ ...l, dataset: d.name ?? '', tileJsonUrl: samePath(l.tileJsonUrl) })),
+  )
+}
+
+export interface TileJson {
+  tiles: string[]
+  timestamps?: string[]
+}
+
+export const tileJson = (url: string) => call<TileJson>(url)

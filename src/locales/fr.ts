@@ -75,6 +75,7 @@ const fr: Catalog = {
     heading: 'Titre',
     text: 'Texte',
     image: 'Image',
+    map: 'Carte',
     button: 'Bouton',
     table: 'Tableau',
     date: 'Date',
@@ -121,6 +122,15 @@ const fr: Catalog = {
   },
   date: { label: 'Date du bloc', pick: 'Choisissez une date' },
   text: { heading: 'Titre de section', body: 'Saisissez votre texte…' },
+  map: {
+    frame: 'Cadrer ici',
+    frameHint: 'Fige le cadrage courant pour le bulletin publié',
+    chooseLayer: 'Choisir une couche',
+    changeLayer: 'Changer de couche',
+    loading: 'Chargement…',
+    date: 'Date de la carte',
+    noGeomanager: 'Geomanager n’est pas disponible sur ce site.',
+  },
   toolbar: {
     paragraph: 'Paragraphe',
     h1: 'Titre 1',
