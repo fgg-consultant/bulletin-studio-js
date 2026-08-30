@@ -1,80 +1,82 @@
 import { nextTick, reactive, watch } from 'vue'
+import * as api from './api'
+import { renderHtml } from './render'
 import type { Block } from './types'
-
-const PREFIX = 'bs-doc:'
 
 export const uid = () => crypto.randomUUID()
 
 export interface BulletinDoc {
   /** null quand aucun bulletin n'est chargé (dashboard) */
-  id: string | null
+  id: number | null
   title: string
   blocks: Block[]
+  /** un modèle est un simple point de départ : jamais publié, jamais public */
+  isTemplate: boolean
+  /** la ProductPage hôte — les parutions d'un modèle la partagent */
+  parent: number | null
+  live: boolean
+  hasUnpublishedChanges: boolean
+  url: string | null
 }
 
-export const doc = reactive<BulletinDoc>({ id: null, title: '', blocks: [] })
+export const doc = reactive<BulletinDoc>({
+  id: null, title: '', blocks: [], isTemplate: false,
+  parent: null, live: false, hasUnpublishedChanges: false, url: null,
+})
 
 export const ui = reactive({
   selectedId: null as string | null,
   hoverId: null as string | null,
   device: 'desktop' as 'desktop' | 'pdf' | 'mobile',
   saved: true,
+  error: null as string | null,
 })
 
-// migration de l'ancien stockage mono-document
-const legacy = localStorage.getItem('bulletin-studio-doc')
-if (legacy) {
-  try {
-    const d = JSON.parse(legacy)
-    localStorage.setItem(PREFIX + uid(), JSON.stringify({ ...d, updatedAt: Date.now() }))
-  } catch {
-    /* contenu illisible : on l'abandonne */
+/** le document + le html publiable, rendu au moment d'enregistrer */
+function payload(): api.BulletinPayload {
+  return {
+    title: doc.title,
+    doc: { blocks: doc.blocks },
+    html: renderHtml(doc.blocks),
+    isTemplate: doc.isTemplate,
   }
-  localStorage.removeItem('bulletin-studio-doc')
 }
 
-export interface BulletinMeta {
-  id: string
-  title: string
-  updatedAt: number
-  blockCount: number
+// vrai pendant qu'on charge un bulletin : les mutations d'un chargement ne sont
+// pas des modifications de l'auteur, elles ne doivent pas déclencher d'écriture
+let loading = false
+
+function apply(b: api.BulletinFull | api.BulletinMeta, blocks?: Block[]) {
+  loading = true
+  doc.id = b.id
+  doc.title = b.title
+  if (blocks) doc.blocks = blocks
+  doc.isTemplate = b.isTemplate
+  doc.parent = b.parent
+  doc.live = b.live
+  doc.hasUnpublishedChanges = b.hasUnpublishedChanges
+  doc.url = b.url
+  nextTick(() => {
+    loading = false
+    ui.saved = true
+  })
 }
 
-export function listBulletins(): BulletinMeta[] {
-  const out: BulletinMeta[] = []
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i)!
-    if (!k.startsWith(PREFIX)) continue
-    try {
-      const d = JSON.parse(localStorage.getItem(k)!)
-      out.push({
-        id: k.slice(PREFIX.length),
-        title: d.title || 'Sans titre',
-        updatedAt: d.updatedAt ?? 0,
-        blockCount: (d.blocks ?? []).length,
-      })
-    } catch {
-      /* clé corrompue : ignorée */
-    }
-  }
-  return out.sort((a, b) => b.updatedAt - a.updatedAt)
-}
-
-function persist() {
+async function persist() {
   if (!doc.id) return
-  localStorage.setItem(
-    PREFIX + doc.id,
-    JSON.stringify({ title: doc.title, blocks: doc.blocks, updatedAt: Date.now() }),
-  )
-  ui.saved = true
+  try {
+    apply(await api.update(doc.id, payload()))
+    ui.error = null
+  } catch (e) {
+    ui.error = (e as Error).message
+  }
 }
 
-// ponytail: autosave localStorage — brancher l'API climweb ici lors de l'intégration
 let saveTimer: number | undefined
 watch(
   doc,
   () => {
-    if (!doc.id) return
+    if (loading || !doc.id) return
     ui.saved = false
     clearTimeout(saveTimer)
     saveTimer = window.setTimeout(persist, 600)
@@ -82,57 +84,56 @@ watch(
   { deep: true },
 )
 
-export function openBulletin(id: string): boolean {
-  const raw = localStorage.getItem(PREFIX + id)
-  if (!raw) return false
+export async function openBulletin(id: number): Promise<boolean> {
   clearTimeout(saveTimer)
-  if (doc.id && !ui.saved) persist() // ne pas perdre la dernière frappe du bulletin précédent
+  if (doc.id && !ui.saved) await persist() // ne pas perdre la dernière frappe
   try {
-    const d = JSON.parse(raw)
-    doc.id = id
-    doc.title = d.title ?? ''
-    doc.blocks = d.blocks ?? []
+    const b = await api.read(id)
+    apply(b, b.doc?.blocks ?? [])
     ui.selectedId = null
     ui.hoverId = null
-    ui.saved = true
+    ui.error = null
     return true
-  } catch {
+  } catch (e) {
+    ui.error = (e as Error).message
     return false
   }
 }
 
-// bulletin d'exemple embarqué (public/default-bulletin.json) : proposé une seule fois quand la liste est vide
-export async function seedIfEmpty() {
-  if (localStorage.getItem('bs-seeded')) return
-  if (listBulletins().length > 0) {
-    localStorage.setItem('bs-seeded', '1')
-    return
-  }
-  try {
-    const r = await fetch(import.meta.env.BASE_URL + 'default-bulletin.json')
-    if (!r.ok) return
-    const d = await r.json()
-    localStorage.setItem(
-      PREFIX + uid(),
-      JSON.stringify({ title: d.title, blocks: d.blocks, updatedAt: Date.now() }),
-    )
-    localStorage.setItem('bs-seeded', '1')
-  } catch {
-    /* hors-ligne : on retentera au prochain chargement */
-  }
+export async function createBulletin(
+  blocks: Block[], title: string, parent: number, isTemplate = false,
+): Promise<number> {
+  const created = await api.create({
+    title, doc: { blocks }, html: renderHtml(blocks), isTemplate, parent,
+  })
+  return created.id
 }
 
-export function createBulletin(blocks: Block[], title = 'Nouveau bulletin'): string {
-  const id = uid()
-  localStorage.setItem(PREFIX + id, JSON.stringify({ title, blocks, updatedAt: Date.now() }))
-  return id
+/** un nouveau numéro : une copie du document du modèle, sous le même produit.
+ *  Le modèle n'est qu'un point de départ — rien ne reste lié ensuite. */
+export async function createFromTemplate(id: number): Promise<number> {
+  const t = await api.read(id)
+  return createBulletin(t.doc?.blocks ?? [], t.title, t.parent, false)
 }
 
-export function deleteBulletin(id: string) {
-  localStorage.removeItem(PREFIX + id)
+export async function deleteBulletin(id: number) {
+  await api.remove(id)
   if (doc.id === id) {
     clearTimeout(saveTimer)
     doc.id = null
+  }
+}
+
+/** publie la parution courante : le html enregistré devient la page publique */
+export async function publishCurrent() {
+  if (!doc.id || doc.isTemplate) return
+  clearTimeout(saveTimer)
+  if (!ui.saved) await persist()
+  try {
+    apply(await api.publish(doc.id))
+    ui.error = null
+  } catch (e) {
+    ui.error = (e as Error).message
   }
 }
 

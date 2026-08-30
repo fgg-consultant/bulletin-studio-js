@@ -2,7 +2,7 @@ import { ref } from 'vue'
 
 // mini-routeur par hash : fonctionne sur GitHub Pages sans config serveur
 // #/          → dashboard
-// #/new       → choix d'un template
+// #/new       → nouveau modèle (produit + point de départ)
 // #/b/<id>    → éditeur
 export interface Route {
   name: 'dashboard' | 'new' | 'editor'
@@ -12,7 +12,7 @@ export interface Route {
 function parse(): Route {
   const h = location.hash.replace(/^#\/?/, '')
   if (h === 'new') return { name: 'new' }
-  const m = h.match(/^b\/(.+)$/)
+  const m = h.match(/^b\/(\d+)$/)
   if (m) return { name: 'editor', id: m[1] }
   return { name: 'dashboard' }
 }

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, watch } from 'vue'
-import { Check, Download, FileText, Monitor, Printer, Smartphone } from 'lucide-vue-next'
+import { Check, Download, ExternalLink, FileText, Monitor, Printer, Smartphone, Upload } from 'lucide-vue-next'
 import { go } from '../router'
-import { doc, exportJson, exportPdf, openBulletin, ui } from '../store'
+import { doc, exportJson, exportPdf, openBulletin, publishCurrent, ui } from '../store'
 import Canvas from './Canvas.vue'
 import Sidebar from './Sidebar.vue'
 
@@ -10,8 +10,8 @@ const props = defineProps<{ id: string }>()
 
 watch(
   () => props.id,
-  (id) => {
-    if (!openBulletin(id)) go('#/')
+  async (id) => {
+    if (!(await openBulletin(Number(id)))) go('#/')
   },
   { immediate: true },
 )
@@ -30,7 +30,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>
 
 <template>
-  <div class="bs-app flex h-screen flex-col bg-white text-slate-800 antialiased">
+  <div class="bs-app flex h-full flex-col bg-white text-slate-800 antialiased">
     <header class="flex h-14 shrink-0 items-center gap-3 border-b border-slate-200 px-4">
       <a href="#/" class="flex items-center gap-2 rounded-md px-1 py-0.5 hover:bg-slate-50" title="Retour aux bulletins">
         <div class="flex size-7 items-center justify-center rounded-md bg-sky-700 text-sm font-bold text-white">B</div>
@@ -47,6 +47,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       <span class="flex items-center gap-1 text-xs text-slate-400">
         <Check v-if="ui.saved" :size="13" />
         {{ ui.saved ? 'Enregistré' : 'Enregistrement…' }}
+      </span>
+      <span
+        v-if="doc.isTemplate"
+        class="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700"
+        title="Un modèle sert de point de départ : il n'a pas de page publique."
+      >
+        Modèle
+      </span>
+      <span v-else class="text-xs font-medium" :class="doc.live ? 'text-emerald-700' : 'text-slate-400'">
+        {{ doc.live ? (doc.hasUnpublishedChanges ? 'Publié · modifications en attente' : 'Publié') : 'Brouillon' }}
       </span>
 
       <div class="ml-auto flex items-center gap-3">
@@ -71,14 +81,36 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           JSON
         </button>
         <button
-          class="flex items-center gap-1.5 rounded-lg bg-sky-700 px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-sky-800"
+          class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
           @click="exportPdf"
         >
           <Printer :size="15" />
-          Exporter PDF
+          PDF
+        </button>
+        <a
+          v-if="doc.url"
+          :href="doc.url"
+          target="_blank"
+          class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+          title="Voir la page publiée dans climweb"
+        >
+          <ExternalLink :size="15" />
+          Voir
+        </a>
+        <button
+          v-if="!doc.isTemplate"
+          class="flex items-center gap-1.5 rounded-lg bg-sky-700 px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-50"
+          :disabled="doc.live && !doc.hasUnpublishedChanges"
+          title="Publier dans la section Produits de climweb"
+          @click="publishCurrent"
+        >
+          <Upload :size="15" />
+          Publier
         </button>
       </div>
     </header>
+
+    <p v-if="ui.error" class="shrink-0 bg-red-50 px-4 py-2 text-sm text-red-700">{{ ui.error }}</p>
 
     <div class="flex min-h-0 flex-1">
       <Sidebar />

@@ -7,11 +7,12 @@ import {
   createEditor,
   type LexicalEditor,
 } from 'lexical'
-import { $createHeadingNode, HeadingNode, QuoteNode, registerRichText } from '@lexical/rich-text'
+import { $createHeadingNode, registerRichText } from '@lexical/rich-text'
 import { createEmptyHistoryState, registerHistory } from '@lexical/history'
-import { ListItemNode, ListNode, registerList } from '@lexical/list'
-import { $toggleLink, AutoLinkNode, LinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link'
+import { registerList } from '@lexical/list'
+import { $toggleLink, TOGGLE_LINK_COMMAND } from '@lexical/link'
 import { mergeRegister } from '@lexical/utils'
+import { nodes, theme } from '../../lexical'
 import type { TextBlock } from '../../types'
 import TextToolbar from '../TextToolbar.vue'
 
@@ -22,24 +23,11 @@ const editor = shallowRef<LexicalEditor | null>(null)
 const isEmpty = ref(false)
 let unregister = () => {}
 
-const theme = {
-  paragraph: 'bs-p',
-  heading: { h1: 'bs-h1', h2: 'bs-h2', h3: 'bs-h3' },
-  list: { ul: 'bs-ul', ol: 'bs-ol', listitem: 'bs-li', nested: { listitem: 'bs-li-nested' } },
-  link: 'bs-link',
-  text: {
-    bold: 'bs-bold',
-    italic: 'bs-italic',
-    underline: 'bs-underline',
-    strikethrough: 'bs-strike',
-    underlineStrikethrough: 'bs-under-strike',
-  },
-}
 
 onMounted(() => {
   const ed = createEditor({
     namespace: `bs-${props.block.id}`,
-    nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode],
+    nodes,
     theme,
     onError: (e) => console.error(e),
   })

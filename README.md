@@ -1,6 +1,7 @@
 # Bulletin Studio
 
-Éditeur WYSIWYG de bulletins par blocs (style Mailchimp), destiné à être intégré dans climweb.
+Éditeur WYSIWYG de bulletins par blocs (style Mailchimp), intégré à climweb par le paquet
+[climweb-bulletin-studio](https://github.com/wmo-raf/climweb-bulletin-studio).
 
 - **Vue 3 + TypeScript + Vite + Tailwind 4**
 - **Lexical** : moteur rich-text de chaque bloc texte/titre (gras, italique, listes, liens, titres, alignement, historique Ctrl+Z)
@@ -8,17 +9,21 @@
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # http://localhost:5180 (port fixe : la page django pointe dessus)
 npm run build
 ```
 
+L'app n'est pas autonome : elle est montée par la page d'admin django, qui lui passe les
+urls de l'API, le jeton CSRF et la base des assets par attributs `data-*` sur
+`#bulletin-studio-app`. Lancer `npm run dev` seul affiche l'app, mais sans store.
+
 ## Navigation
 
-Routing par hash (compatible GitHub Pages) : `#/` dashboard (liste, ouverture, suppression),
-`#/new` choix d'un template de départ, `#/b/<id>` éditeur. Un bulletin par clé
-`bs-doc:<id>` dans le localStorage (l'ancienne clé mono-document est migrée automatiquement).
-Au premier chargement, si la liste est vide, un bulletin d'exemple
-(`public/default-bulletin.json`) est proposé — une seule fois (drapeau `bs-seeded`).
+Routing par hash : `#/` dashboard (modèles et bulletins), `#/new` nouveau modèle
+(produit climweb + point de départ), `#/b/<id>` éditeur.
+
+Un **modèle** est un bulletin marqué comme tel, rattaché à un produit climweb ; il sert de
+point de départ qu'on copie. Un **bulletin** est une parution publiable de ce produit.
 
 ## Modèle de données
 
@@ -32,23 +37,33 @@ Block = header { eyebrow, title, subtitle, badges[], bg }
       | columns { ratios, columns: Block[][] }   // pas de colonnes imbriquées
 ```
 
-- Autosauvegarde dans `localStorage` (`src/store.ts`) — à remplacer par l'API climweb.
-- « JSON » télécharge le document ; « Exporter PDF » passe par l'impression native du navigateur
-  (la feuille `@media print` force le rendu « pdf » et masque le chrome d'édition).
-  `@page { margin: 0 }` supprime les en-têtes/pieds de page injectés par le navigateur
-  (ils s'impriment dans les marges papier) ; la respiration vient d'un padding intérieur en mm.
-- 3 modes d'aperçu : desktop (980 px, colonnes libres), pdf (770 px, 2 colonnes max — les rangées
-  de 3+ se replient), mobile (420 px, tout empilé). On travaille en desktop, le reste est responsive.
-- Les images uploadées sont stockées en dataURL dans le document — à remplacer par un upload serveur.
+- Enregistrement dans climweb (`src/store.ts` → `src/api.ts`), en brouillon Wagtail ;
+  publier est une action explicite.
+- Chaque enregistrement envoie **le document et son rendu HTML** (`src/render.ts`) :
+  c'est ce HTML que sert la page publique du bulletin, il n'y a pas de moteur de rendu
+  côté python à tenir synchronisé. Ce n'est pas une capture du DOM de l'éditeur mais un
+  rendu de sortie : uniquement des classes `bs-*` et des styles inline, stylés par
+  `src/content.css` — la même feuille des deux côtés.
+- « Exporter PDF » passe par l'impression native du navigateur (la feuille `@media print`
+  force le rendu « pdf » et masque le chrome d'édition). `@page { margin: 0 }` supprime les
+  en-têtes/pieds injectés par le navigateur ; la respiration vient d'un padding en mm.
+- 3 modes d'aperçu : desktop (980 px, colonnes libres), pdf (770 px, 2 colonnes max — les
+  rangées de 3+ se replient), mobile (420 px, tout empilé).
+- Les images uploadées sont stockées en dataURL dans le document — à remplacer par un
+  upload vers les images Wagtail.
 
 ## Structure
 
 ```
 src/
+  api.ts                    client du store climweb (product-pages, CRUD, publish)
   store.ts                  état réactif du doc + sélection + helpers (remove/duplicate/export)
+  render.ts                 document → HTML publié
+  lexical.ts                thème et nœuds Lexical partagés éditeur / rendu
+  content.css               styles du contenu (éditeur + page publiée)
   components/
-    Dashboard.vue           liste des bulletins (ouvrir / supprimer / créer)
-    TemplateChooser.vue     points de départ (templates définis dans src/templates.ts)
+    Dashboard.vue           modèles et bulletins (ouvrir / créer / publier / supprimer)
+    TemplateChooser.vue     nouveau modèle : produit climweb + point de départ
     Editor.vue              coquille de l'éditeur (topbar + sidebar + canvas)
     Sidebar.vue             palette de blocs (clic = ajout à la fin, drag = dépôt ciblé)
     Canvas.vue              la page en construction

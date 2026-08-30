@@ -1,0 +1,231 @@
+/* Styles du contenu d'un bulletin — la seule feuille dont la page publiée a besoin.
+   Elle est importée par style.css (donc active dans l'éditeur) et buildée à part en
+   `bulletin-studio-content.css`, que le gabarit django charge : mêmes règles des deux
+   côtés, ce que l'auteur compose est ce que le site affiche.
+
+   Les règles de bloc sont scopées sous `.bs-doc` (le conteneur de la page publiée) :
+   dans l'éditeur les blocs gardent leur propre markup Tailwind, rien ne se marche
+   dessus. Les classes du thème Lexical, elles, servent des deux côtés. */
+
+/* ---- contenu riche (thème Lexical) ---- */
+.bs-h1 {
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  margin: 0.375rem 0;
+}
+.bs-h2 {
+  font-size: 1.375rem;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+  margin: 0.375rem 0;
+}
+.bs-h3 {
+  font-size: 1.125rem;
+  line-height: 1.3;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0.25rem 0;
+}
+.bs-p {
+  margin: 0.25rem 0;
+  line-height: 1.65;
+  color: #334155;
+}
+.bs-ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin: 0.25rem 0;
+  color: #334155;
+}
+.bs-ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+  margin: 0.25rem 0;
+  color: #334155;
+}
+.bs-li {
+  margin: 0.125rem 0;
+}
+.bs-li-nested {
+  list-style: none;
+}
+.bs-link {
+  color: #0369a1;
+  text-decoration: underline;
+}
+.bs-bold {
+  font-weight: 700;
+}
+.bs-italic {
+  font-style: italic;
+}
+.bs-underline {
+  text-decoration: underline;
+}
+.bs-strike {
+  text-decoration: line-through;
+}
+.bs-under-strike {
+  text-decoration: underline line-through;
+}
+
+/* ---- la page publiée ---- */
+.bs-doc {
+  --bs-pad: 1.25rem;
+  max-width: 820px;
+  margin: 2rem auto;
+  padding: var(--bs-pad);
+  background: #fff;
+  color: #334155;
+  line-height: 1.6;
+}
+/* le bandeau de titre déborde des marges de page, comme dans l'éditeur */
+.bs-doc > .bs-header {
+  margin-inline: calc(-1 * var(--bs-pad));
+}
+.bs-doc > .bs-header:first-child {
+  margin-top: calc(-1 * var(--bs-pad));
+}
+
+.bs-doc .bs-header {
+  padding: 2.25rem 2rem;
+  border-radius: 0.5rem;
+}
+.bs-doc .bs-header-dark {
+  color: #fff;
+}
+.bs-doc .bs-header-light {
+  color: #0f172a;
+}
+.bs-doc .bs-eyebrow {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.bs-doc .bs-header-title {
+  margin: 0.75rem 0 0;
+  font-size: 2.25rem;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: inherit;
+}
+.bs-doc .bs-header-sub {
+  margin: 1rem 0 0;
+  max-width: 42rem;
+  line-height: 1.6;
+  opacity: 0.9;
+  color: inherit;
+}
+.bs-doc .bs-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+.bs-doc .bs-badge {
+  border: 1px solid currentColor;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.bs-doc .bs-text {
+  margin: 0.5rem 0;
+}
+
+.bs-doc .bs-figure {
+  margin: 1rem 0;
+}
+.bs-doc .bs-figure img {
+  display: block;
+  width: 100%;
+  border-radius: 0.25rem;
+}
+.bs-doc .bs-caption {
+  margin-top: 0.375rem;
+  text-align: center;
+  font-size: 0.75rem;
+  font-style: italic;
+  color: #64748b;
+}
+
+.bs-doc .bs-btn-wrap {
+  margin: 0.75rem 0;
+}
+.bs-doc .bs-btn {
+  display: inline-block;
+  background: #0369a1;
+  color: #fff;
+  border-radius: 0.375rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.bs-doc .bs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin: 0.75rem 0;
+}
+.bs-doc .bs-table th,
+.bs-doc .bs-table td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+.bs-doc .bs-table th {
+  background: #f1f5f9;
+  font-weight: 600;
+  color: #1e293b;
+}
+.bs-doc .bs-table td {
+  color: #475569;
+}
+
+.bs-doc .bs-date {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #64748b;
+}
+
+.bs-doc .bs-divider {
+  margin: 0.75rem 0;
+  border: 0;
+  border-top: 2px solid #e2e8f0;
+}
+
+.bs-doc .bs-cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+}
+.bs-doc .bs-col {
+  flex-basis: 0;
+  min-width: 0;
+}
+/* au-delà de 2 colonnes, on replie par rangées de 2 — comme l'aperçu pdf */
+.bs-doc .bs-cols-many > .bs-col {
+  flex-basis: calc(50% - 0.375rem);
+}
+@media (max-width: 640px) {
+  .bs-doc .bs-col {
+    flex-basis: 100%;
+  }
+}

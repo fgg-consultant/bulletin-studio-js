@@ -1,25 +1,54 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { FileText, Plus, Trash2 } from 'lucide-vue-next'
-import { deleteBulletin, listBulletins, seedIfEmpty } from '../store'
+import { computed, onMounted, ref } from 'vue'
+import { ExternalLink, FileText, LayoutTemplate, Plus, Trash2 } from 'lucide-vue-next'
+import * as api from '../api'
+import { go } from '../router'
+import { createFromTemplate, deleteBulletin } from '../store'
 
-const bulletins = ref(listBulletins())
-onMounted(async () => {
-  await seedIfEmpty()
-  bulletins.value = listBulletins()
-})
+const items = ref<api.BulletinMeta[]>([])
+const error = ref<string | null>(null)
+const busy = ref(false)
+
+const templates = computed(() => items.value.filter((b) => b.isTemplate))
+const issues = computed(() => items.value.filter((b) => !b.isTemplate))
+
+async function refresh() {
+  try {
+    items.value = await api.list()
+    error.value = null
+  } catch (e) {
+    error.value = (e as Error).message
+  }
+}
+onMounted(refresh)
 
 const fmt = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' })
 
-function remove(id: string, title: string) {
-  if (!confirm(`Supprimer « ${title} » ? Cette action est définitive.`)) return
-  deleteBulletin(id)
-  bulletins.value = listBulletins()
+async function newIssue(templateId: number) {
+  busy.value = true
+  try {
+    go(`#/b/${await createFromTemplate(templateId)}`)
+  } catch (e) {
+    error.value = (e as Error).message
+  } finally {
+    busy.value = false
+  }
+}
+
+async function remove(b: api.BulletinMeta) {
+  const what = b.isTemplate ? 'le modèle' : 'le bulletin'
+  if (!confirm(`Supprimer ${what} « ${b.title} » ? Cette action est définitive.`)) return
+  try {
+    await deleteBulletin(b.id)
+    await refresh()
+  } catch (e) {
+    error.value = (e as Error).message
+  }
 }
 </script>
 
 <template>
-  <div class="flex h-screen flex-col bg-slate-50 text-slate-800 antialiased">
+  <div class="flex h-full flex-col bg-slate-50 text-slate-800 antialiased">
     <header class="flex h-14 shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-4">
       <div class="flex size-7 items-center justify-center rounded-md bg-sky-700 text-sm font-bold text-white">B</div>
       <span class="text-sm font-semibold tracking-tight">Bulletin Studio</span>
@@ -28,60 +57,124 @@ function remove(id: string, title: string) {
         class="ml-auto flex items-center gap-1.5 rounded-lg bg-sky-700 px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-sky-800"
       >
         <Plus :size="15" />
-        Nouveau bulletin
+        Nouveau modèle
       </a>
     </header>
 
+    <p v-if="error" class="shrink-0 bg-red-50 px-4 py-2 text-sm text-red-700">{{ error }}</p>
+
     <main class="min-h-0 flex-1 overflow-y-auto">
       <div class="mx-auto max-w-3xl px-6 py-10">
-        <h1 class="text-xl font-bold tracking-tight text-slate-900">Mes bulletins</h1>
+        <h1 class="text-xl font-bold tracking-tight text-slate-900">Modèles</h1>
         <p class="mt-1 text-sm text-slate-500">
-          {{ bulletins.length }} bulletin{{ bulletins.length > 1 ? 's' : '' }} — enregistrés dans ce navigateur.
+          Un modèle est un point de départ, rattaché à un produit climweb. Les bulletins qui en
+          sont issus deviennent des parutions de ce produit.
         </p>
 
-        <div v-if="bulletins.length" class="mt-6 flex flex-col gap-2.5">
-          <a
-            v-for="b in bulletins"
-            :key="b.id"
-            :href="`#/b/${b.id}`"
-            class="group flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 hover:border-sky-500 hover:shadow-sm"
+        <div v-if="templates.length" class="mt-5 flex flex-col gap-2.5">
+          <div
+            v-for="t in templates"
+            :key="t.id"
+            class="group flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4"
           >
-            <div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
-              <FileText :size="18" />
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="truncate font-semibold text-slate-800 group-hover:text-sky-800">{{ b.title }}</div>
-              <div class="mt-0.5 text-xs text-slate-500">
-                Modifié le {{ fmt.format(b.updatedAt) }} · {{ b.blockCount }} bloc{{ b.blockCount > 1 ? 's' : '' }}
+            <a :href="`#/b/${t.id}`" class="flex min-w-0 flex-1 items-center gap-4">
+              <div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
+                <LayoutTemplate :size="18" />
               </div>
-            </div>
+              <div class="min-w-0 flex-1">
+                <div class="truncate font-semibold text-slate-800">{{ t.title }}</div>
+                <div class="mt-0.5 text-xs text-slate-500">
+                  {{ t.parentTitle }} · {{ t.blockCount }} bloc{{ t.blockCount > 1 ? 's' : '' }}
+                </div>
+              </div>
+            </a>
             <button
-              class="rounded-md p-2 text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
-              title="Supprimer ce bulletin"
-              @click.prevent.stop="remove(b.id, b.title)"
+              class="flex items-center gap-1.5 rounded-lg border border-sky-700 px-3 py-1.5 text-sm font-semibold text-sky-700 hover:bg-sky-50 disabled:opacity-50"
+              :disabled="busy"
+              @click="newIssue(t.id)"
+            >
+              <Plus :size="14" />
+              Nouveau bulletin
+            </button>
+            <button
+              class="rounded-md p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
+              title="Supprimer ce modèle"
+              @click="remove(t)"
             >
               <Trash2 :size="16" />
             </button>
-          </a>
+          </div>
         </div>
 
         <div
           v-else
-          class="mt-10 flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-slate-300 bg-white px-6 py-14 text-center"
+          class="mt-5 flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-slate-300 bg-white px-6 py-12 text-center"
         >
-          <div class="rounded-full bg-sky-50 p-4 text-sky-700"><FileText :size="24" /></div>
-          <p class="font-medium text-slate-700">Aucun bulletin pour l'instant</p>
+          <div class="rounded-full bg-amber-50 p-4 text-amber-700"><LayoutTemplate :size="24" /></div>
+          <p class="font-medium text-slate-700">Aucun modèle pour l'instant</p>
           <p class="max-w-sm text-sm text-slate-500">
-            Créez votre premier bulletin à partir d'un template, puis composez-le par glisser-déposer.
+            Créez un modèle, choisissez le produit climweb qui l'accueille, puis composez-le par
+            glisser-déposer.
           </p>
           <a
             href="#/new"
             class="mt-2 flex items-center gap-1.5 rounded-lg bg-sky-700 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-800"
           >
             <Plus :size="15" />
-            Créer un bulletin
+            Créer un modèle
           </a>
         </div>
+
+        <h2 class="mt-12 text-xl font-bold tracking-tight text-slate-900">Bulletins</h2>
+        <p class="mt-1 text-sm text-slate-500">
+          {{ issues.length }} bulletin{{ issues.length > 1 ? 's' : '' }}.
+        </p>
+
+        <div v-if="issues.length" class="mt-5 flex flex-col gap-2.5">
+          <div
+            v-for="b in issues"
+            :key="b.id"
+            class="group flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4"
+          >
+            <a :href="`#/b/${b.id}`" class="flex min-w-0 flex-1 items-center gap-4">
+              <div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
+                <FileText :size="18" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="truncate font-semibold text-slate-800 group-hover:text-sky-800">{{ b.title }}</div>
+                <div class="mt-0.5 text-xs text-slate-500">
+                  {{ b.parentTitle }}
+                  <template v-if="b.updatedAt"> · modifié le {{ fmt.format(b.updatedAt) }}</template>
+                </div>
+              </div>
+            </a>
+            <span
+              class="rounded-full px-2 py-0.5 text-xs font-medium"
+              :class="b.live ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'"
+            >
+              {{ b.live ? (b.hasUnpublishedChanges ? 'Publié · en attente' : 'Publié') : 'Brouillon' }}
+            </span>
+            <a
+              v-if="b.url"
+              :href="b.url"
+              target="_blank"
+              class="rounded-md p-2 text-slate-400 hover:bg-slate-100 hover:text-sky-700"
+              title="Voir la page publiée"
+            >
+              <ExternalLink :size="16" />
+            </a>
+            <button
+              class="rounded-md p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
+              title="Supprimer ce bulletin"
+              @click="remove(b)"
+            >
+              <Trash2 :size="16" />
+            </button>
+          </div>
+        </div>
+        <p v-else class="mt-5 rounded-lg border border-dashed border-slate-300 bg-white px-6 py-8 text-center text-sm text-slate-500">
+          Aucun bulletin. Créez-en un depuis un modèle ci-dessus.
+        </p>
       </div>
     </main>
   </div>
