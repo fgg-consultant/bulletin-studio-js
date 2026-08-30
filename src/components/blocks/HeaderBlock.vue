@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Plus, X } from 'lucide-vue-next'
+import { t } from '../../i18n'
 import { pastePlain, uid } from '../../store'
 import type { HeaderBlock } from '../../types'
 
@@ -37,7 +38,7 @@ function edit(e: Event, key: 'eyebrow' | 'title' | 'subtitle') {
         v-init-text="block.eyebrow"
         contenteditable="true"
         spellcheck="false"
-        data-placeholder="Type de bulletin"
+        :data-placeholder="t('header.eyebrow')"
         class="text-xs font-semibold tracking-[0.15em] uppercase outline-none"
         :class="dark ? 'text-white/75' : 'text-slate-600'"
         @input="edit($event, 'eyebrow')"
@@ -50,7 +51,7 @@ function edit(e: Event, key: 'eyebrow' | 'title' | 'subtitle') {
       v-init-text="block.title"
       contenteditable="true"
       spellcheck="false"
-      data-placeholder="N°1 — Titre du bulletin"
+      :data-placeholder="t('header.title')"
       class="mt-4 text-4xl leading-tight font-extrabold tracking-tight outline-none"
       @input="edit($event, 'title')"
       @paste="pastePlain"
@@ -61,7 +62,7 @@ function edit(e: Event, key: 'eyebrow' | 'title' | 'subtitle') {
       v-init-text="block.subtitle"
       contenteditable="true"
       spellcheck="false"
-      data-placeholder="Résumé du bulletin en une ou deux phrases."
+      :data-placeholder="t('header.subtitle')"
       class="mt-4 max-w-2xl text-base leading-relaxed outline-none"
       :class="dark ? 'text-white/85' : 'text-slate-700'"
       @input="edit($event, 'subtitle')"
@@ -88,7 +89,7 @@ function edit(e: Event, key: 'eyebrow' | 'title' | 'subtitle') {
         <button
           v-if="selected"
           class="-mr-1 rounded-full p-0.5 opacity-60 hover:opacity-100"
-          title="Retirer le badge"
+          :title="t('header.removeBadge')"
           @click.stop="block.badges.splice(block.badges.indexOf(badge), 1)"
         >
           <X :size="11" />
@@ -98,14 +99,14 @@ function edit(e: Event, key: 'eyebrow' | 'title' | 'subtitle') {
         v-if="selected"
         class="flex items-center gap-1 rounded-full border border-dashed px-3 py-1 text-xs font-medium opacity-70 hover:opacity-100"
         :class="dark ? 'border-white/40' : 'border-slate-400'"
-        @click.stop="block.badges.push({ id: uid(), text: 'Nouveau badge' })"
+        @click.stop="block.badges.push({ id: uid(), text: t('header.badge') })"
       >
-        <Plus :size="11" /> Badge
+        <Plus :size="11" /> {{ t('header.badge') }}
       </button>
     </div>
 
     <div v-if="selected" class="mt-6 flex w-fit items-center gap-2 rounded-lg bg-white/95 p-2 shadow" @click.stop>
-      <span class="px-1 text-xs font-medium text-slate-600">Fond</span>
+      <span class="px-1 text-xs font-medium text-slate-600">{{ t('header.background') }}</span>
       <button
         v-for="c in swatches"
         :key="c"
@@ -118,7 +119,7 @@ function edit(e: Event, key: 'eyebrow' | 'title' | 'subtitle') {
       <input
         v-model="block.bg"
         type="color"
-        aria-label="Couleur de fond personnalisée"
+        :aria-label="t('header.customColor')"
         class="size-6 cursor-pointer rounded border border-slate-300"
       />
     </div>

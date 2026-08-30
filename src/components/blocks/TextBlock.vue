@@ -12,6 +12,7 @@ import { createEmptyHistoryState, registerHistory } from '@lexical/history'
 import { registerList } from '@lexical/list'
 import { $toggleLink, TOGGLE_LINK_COMMAND } from '@lexical/link'
 import { mergeRegister } from '@lexical/utils'
+import { t } from '../../i18n'
 import { nodes, theme } from '../../lexical'
 import type { TextBlock } from '../../types'
 import TextToolbar from '../TextToolbar.vue'
@@ -78,7 +79,7 @@ onBeforeUnmount(() => {
       class="bs-placeholder pointer-events-none absolute left-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-slate-400"
       :class="block.preset === 'heading' ? 'top-1.5 text-[1.375rem] font-bold' : 'top-1'"
     >
-      {{ block.preset === 'heading' ? 'Titre de section' : 'Saisissez votre texte…' }}
+      {{ t(block.preset === 'heading' ? 'text.heading' : 'text.body') }}
     </div>
   </div>
 </template>

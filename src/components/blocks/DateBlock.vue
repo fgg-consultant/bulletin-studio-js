@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { AlignCenter, AlignLeft, AlignRight, Calendar } from 'lucide-vue-next'
+import { formatDate, t } from '../../i18n'
 import type { DateBlock } from '../../types'
 
 const props = defineProps<{ block: DateBlock; selected: boolean }>()
 
 const formatted = computed(() => {
   const d = new Date(props.block.date + 'T00:00:00')
-  return isNaN(d.getTime())
-    ? 'Choisissez une date'
-    : new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(d)
+  return isNaN(d.getTime()) ? t('date.pick') : formatDate(d)
 })
 
 const aligns = [
@@ -32,7 +31,7 @@ const aligns = [
         v-model="block.date"
         type="date"
         name="date"
-        aria-label="Date du bloc"
+        :aria-label="t('date.label')"
         class="rounded border border-slate-200 px-2 py-1 text-xs text-slate-700 focus:outline-1 focus:outline-sky-600"
       />
       <div class="flex rounded border border-slate-200 p-0.5">

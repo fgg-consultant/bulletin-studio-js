@@ -48,7 +48,7 @@ body,
   position: relative;
 }
 .bs-empty-col::after {
-  content: 'Déposer ici';
+  content: var(--bs-drop-label, 'Drop here');
   position: absolute;
   inset: 0;
   display: flex;

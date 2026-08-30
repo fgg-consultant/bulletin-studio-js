@@ -6,6 +6,7 @@
  * l'éditeur charge, donc ce que l'auteur compose est ce que le site affiche. */
 import { $generateHtmlFromNodes } from '@lexical/html'
 import { $getRoot, createEditor } from 'lexical'
+import { formatDate } from './i18n'
 import { nodes, theme } from './lexical'
 import type { Block } from './types'
 
@@ -35,8 +36,6 @@ function isDark(hex: string): boolean {
   const [r = 0, g = 0, b = 0] = (hex.match(/\w\w/g) ?? []).map((h) => parseInt(h, 16))
   return r * 0.299 + g * 0.587 + b * 0.114 < 140
 }
-
-const frDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 
 const SPACER = { sm: '16px', md: '32px', lg: '64px' }
 
@@ -86,7 +85,7 @@ function block(b: Block): string {
     case 'date': {
       const d = new Date(b.date + 'T00:00:00')
       if (isNaN(d.getTime())) return ''
-      return `<div class="bs-date" style="text-align:${esc(b.align)}">${esc(frDate.format(d))}</div>`
+      return `<div class="bs-date" style="text-align:${esc(b.align)}">${esc(formatDate(d))}</div>`
     }
     case 'divider':
       return '<hr class="bs-divider">'

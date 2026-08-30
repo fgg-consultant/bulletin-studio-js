@@ -35,6 +35,7 @@ import {
   Strikethrough,
   Underline,
 } from 'lucide-vue-next'
+import { t } from '../i18n'
 
 const props = defineProps<{ editor: LexicalEditor }>()
 
@@ -102,7 +103,7 @@ function toggleLink() {
     props.editor.dispatchCommand(TOGGLE_LINK_COMMAND, null)
   } else {
     // ponytail: window.prompt — remplacer par un petit popover si besoin
-    const url = window.prompt('URL du lien :', 'https://')
+    const url = window.prompt(t('toolbar.linkPrompt'), 'https://')
     if (url) props.editor.dispatchCommand(TOGGLE_LINK_COMMAND, url)
   }
 }
@@ -118,22 +119,22 @@ const txtBtn = (active: boolean) =>
     class="absolute -top-11 left-0 z-30 flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white p-1 whitespace-nowrap shadow-lg"
     @click.stop
   >
-    <button :class="txtBtn(s.block === 'paragraph')" title="Paragraphe" @mousedown.prevent @click="setBlock('paragraph')">P</button>
-    <button :class="txtBtn(s.block === 'h1')" title="Titre 1" @mousedown.prevent @click="setBlock('h1')">H1</button>
-    <button :class="txtBtn(s.block === 'h2')" title="Titre 2" @mousedown.prevent @click="setBlock('h2')">H2</button>
-    <button :class="txtBtn(s.block === 'h3')" title="Titre 3" @mousedown.prevent @click="setBlock('h3')">H3</button>
+    <button :class="txtBtn(s.block === 'paragraph')" :title="t('toolbar.paragraph')" @mousedown.prevent @click="setBlock('paragraph')">P</button>
+    <button :class="txtBtn(s.block === 'h1')" :title="t('toolbar.h1')" @mousedown.prevent @click="setBlock('h1')">H1</button>
+    <button :class="txtBtn(s.block === 'h2')" :title="t('toolbar.h2')" @mousedown.prevent @click="setBlock('h2')">H2</button>
+    <button :class="txtBtn(s.block === 'h3')" :title="t('toolbar.h3')" @mousedown.prevent @click="setBlock('h3')">H3</button>
     <div class="mx-0.5 h-5 w-px bg-slate-200" />
-    <button :class="btn(s.bold)" title="Gras" @mousedown.prevent @click="format('bold')"><Bold :size="14" /></button>
-    <button :class="btn(s.italic)" title="Italique" @mousedown.prevent @click="format('italic')"><Italic :size="14" /></button>
-    <button :class="btn(s.underline)" title="Souligné" @mousedown.prevent @click="format('underline')"><Underline :size="14" /></button>
-    <button :class="btn(s.strike)" title="Barré" @mousedown.prevent @click="format('strikethrough')"><Strikethrough :size="14" /></button>
+    <button :class="btn(s.bold)" :title="t('toolbar.bold')" @mousedown.prevent @click="format('bold')"><Bold :size="14" /></button>
+    <button :class="btn(s.italic)" :title="t('toolbar.italic')" @mousedown.prevent @click="format('italic')"><Italic :size="14" /></button>
+    <button :class="btn(s.underline)" :title="t('toolbar.underline')" @mousedown.prevent @click="format('underline')"><Underline :size="14" /></button>
+    <button :class="btn(s.strike)" :title="t('toolbar.strike')" @mousedown.prevent @click="format('strikethrough')"><Strikethrough :size="14" /></button>
     <div class="mx-0.5 h-5 w-px bg-slate-200" />
-    <button :class="btn(s.list === 'bullet')" title="Liste à puces" @mousedown.prevent @click="toggleList('bullet')"><List :size="14" /></button>
-    <button :class="btn(s.list === 'number')" title="Liste numérotée" @mousedown.prevent @click="toggleList('number')"><ListOrdered :size="14" /></button>
-    <button :class="btn(s.link)" title="Lien" @mousedown.prevent @click="toggleLink"><Link2 :size="14" /></button>
+    <button :class="btn(s.list === 'bullet')" :title="t('toolbar.bulletList')" @mousedown.prevent @click="toggleList('bullet')"><List :size="14" /></button>
+    <button :class="btn(s.list === 'number')" :title="t('toolbar.numberedList')" @mousedown.prevent @click="toggleList('number')"><ListOrdered :size="14" /></button>
+    <button :class="btn(s.link)" :title="t('toolbar.link')" @mousedown.prevent @click="toggleLink"><Link2 :size="14" /></button>
     <div class="mx-0.5 h-5 w-px bg-slate-200" />
-    <button :class="btn(s.align === 'left')" title="Aligner à gauche" @mousedown.prevent @click="align('left')"><AlignLeft :size="14" /></button>
-    <button :class="btn(s.align === 'center')" title="Centrer" @mousedown.prevent @click="align('center')"><AlignCenter :size="14" /></button>
-    <button :class="btn(s.align === 'right')" title="Aligner à droite" @mousedown.prevent @click="align('right')"><AlignRight :size="14" /></button>
+    <button :class="btn(s.align === 'left')" :title="t('toolbar.alignLeft')" @mousedown.prevent @click="align('left')"><AlignLeft :size="14" /></button>
+    <button :class="btn(s.align === 'center')" :title="t('toolbar.alignCenter')" @mousedown.prevent @click="align('center')"><AlignCenter :size="14" /></button>
+    <button :class="btn(s.align === 'right')" :title="t('toolbar.alignRight')" @mousedown.prevent @click="align('right')"><AlignRight :size="14" /></button>
   </div>
 </template>

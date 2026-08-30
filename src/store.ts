@@ -1,5 +1,6 @@
 import { nextTick, reactive, watch } from 'vue'
 import * as api from './api'
+import { t } from './i18n'
 import { renderHtml } from './render'
 import type { Block } from './types'
 
@@ -191,7 +192,7 @@ export function exportJson() {
   })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
-  a.download = `${doc.title.trim() || 'bulletin'}.json`
+  a.download = `${doc.title.trim() || t('editor.fileName')}.json`
   a.click()
   URL.revokeObjectURL(a.href)
 }

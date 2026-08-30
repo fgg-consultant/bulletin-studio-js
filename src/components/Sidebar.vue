@@ -12,6 +12,7 @@ import {
   Table,
   Type,
 } from 'lucide-vue-next'
+import { t } from '../i18n'
 import { doc, ui, uid } from '../store'
 import type { Block, BlockType } from '../types'
 
@@ -27,29 +28,29 @@ interface PaletteItem {
 const content: PaletteItem[] = [
   {
     key: 'header',
-    label: 'En-tête',
+    label: t('sidebar.header'),
     type: 'header',
     icon: PanelTop,
     create: () => ({
       id: uid(),
       type: 'header',
-      eyebrow: 'Bulletin',
+      eyebrow: t('defaults.eyebrow'),
       title: '',
       subtitle: '',
       badges: [
-        { id: uid(), text: 'Valide du … au …' },
-        { id: uid(), text: 'Publié le …' },
+        { id: uid(), text: t('defaults.badgeValid') },
+        { id: uid(), text: t('defaults.badgePublished') },
       ],
       bg: '#175243',
     }),
   },
-  { key: 'heading', label: 'Titre', type: 'text', icon: Heading1, create: () => ({ id: uid(), type: 'text', preset: 'heading', state: null }) },
-  { key: 'text', label: 'Texte', type: 'text', icon: Type, create: () => ({ id: uid(), type: 'text', preset: 'text', state: null }) },
-  { key: 'image', label: 'Image', type: 'image', icon: ImageIcon, create: () => ({ id: uid(), type: 'image', src: null, alt: '', caption: '' }) },
-  { key: 'button', label: 'Bouton', type: 'button', icon: MousePointerClick, create: () => ({ id: uid(), type: 'button', label: 'En savoir plus', href: '', align: 'center' }) },
+  { key: 'heading', label: t('sidebar.heading'), type: 'text', icon: Heading1, create: () => ({ id: uid(), type: 'text', preset: 'heading', state: null }) },
+  { key: 'text', label: t('sidebar.text'), type: 'text', icon: Type, create: () => ({ id: uid(), type: 'text', preset: 'text', state: null }) },
+  { key: 'image', label: t('sidebar.image'), type: 'image', icon: ImageIcon, create: () => ({ id: uid(), type: 'image', src: null, alt: '', caption: '' }) },
+  { key: 'button', label: t('sidebar.button'), type: 'button', icon: MousePointerClick, create: () => ({ id: uid(), type: 'button', label: t('defaults.button'), href: '', align: 'center' }) },
   {
     key: 'table',
-    label: 'Tableau',
+    label: t('sidebar.table'),
     type: 'table',
     icon: Table,
     create: () => ({
@@ -57,7 +58,7 @@ const content: PaletteItem[] = [
       type: 'table',
       header: true,
       rows: [
-        ['Colonne 1', 'Colonne 2', 'Colonne 3'],
+        [1, 2, 3].map((n) => t('defaults.column', { n })),
         ['', '', ''],
         ['', '', ''],
       ],
@@ -65,13 +66,13 @@ const content: PaletteItem[] = [
   },
   {
     key: 'date',
-    label: 'Date',
+    label: t('sidebar.date'),
     type: 'date',
     icon: Calendar,
     create: () => ({ id: uid(), type: 'date', date: new Date().toISOString().slice(0, 10), align: 'left' }),
   },
-  { key: 'divider', label: 'Séparateur', type: 'divider', icon: Minus, create: () => ({ id: uid(), type: 'divider' }) },
-  { key: 'spacer', label: 'Espaceur', type: 'spacer', icon: MoveVertical, create: () => ({ id: uid(), type: 'spacer', size: 'md' }) },
+  { key: 'divider', label: t('sidebar.divider'), type: 'divider', icon: Minus, create: () => ({ id: uid(), type: 'divider' }) },
+  { key: 'spacer', label: t('sidebar.spacer'), type: 'spacer', icon: MoveVertical, create: () => ({ id: uid(), type: 'spacer', size: 'md' }) },
 ]
 
 const columns = (ratios: number[]): (() => Block) => () => ({
@@ -82,11 +83,11 @@ const columns = (ratios: number[]): (() => Block) => () => ({
 })
 
 const layouts: PaletteItem[] = [
-  { key: 'c1', label: '1 colonne', type: 'columns', ratios: [1], create: columns([1]) },
-  { key: 'c2', label: '2 colonnes', type: 'columns', ratios: [1, 1], create: columns([1, 1]) },
-  { key: 'c3', label: '3 colonnes', type: 'columns', ratios: [1, 1, 1], create: columns([1, 1, 1]) },
-  { key: 'c12', label: '1 : 2', type: 'columns', ratios: [1, 2], create: columns([1, 2]) },
-  { key: 'c21', label: '2 : 1', type: 'columns', ratios: [2, 1], create: columns([2, 1]) },
+  { key: 'c1', label: t('sidebar.c1'), type: 'columns', ratios: [1], create: columns([1]) },
+  { key: 'c2', label: t('sidebar.c2'), type: 'columns', ratios: [1, 1], create: columns([1, 1]) },
+  { key: 'c3', label: t('sidebar.c3'), type: 'columns', ratios: [1, 1, 1], create: columns([1, 1, 1]) },
+  { key: 'c12', label: t('sidebar.c12'), type: 'columns', ratios: [1, 2], create: columns([1, 2]) },
+  { key: 'c21', label: t('sidebar.c21'), type: 'columns', ratios: [2, 1], create: columns([2, 1]) },
 ]
 
 const paletteGroup = { name: 'blocks', pull: 'clone', put: false }
@@ -105,10 +106,8 @@ function add(item: PaletteItem) {
 <template>
   <aside class="flex w-72 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white">
     <div class="px-4 pt-5">
-      <h2 class="text-sm font-semibold text-slate-800">Contenu</h2>
-      <p class="mt-0.5 text-xs leading-relaxed text-slate-500">
-        Glissez un bloc vers la page, ou cliquez pour l'ajouter à la fin.
-      </p>
+      <h2 class="text-sm font-semibold text-slate-800">{{ t('sidebar.content') }}</h2>
+      <p class="mt-0.5 text-xs leading-relaxed text-slate-500">{{ t('sidebar.contentHint') }}</p>
     </div>
     <draggable
       :list="content"
@@ -132,10 +131,8 @@ function add(item: PaletteItem) {
     </draggable>
 
     <div class="px-4 pt-2">
-      <h2 class="text-sm font-semibold text-slate-800">Mise en page</h2>
-      <p class="mt-0.5 text-xs leading-relaxed text-slate-500">
-        Des colonnes dans lesquelles déposer du contenu.
-      </p>
+      <h2 class="text-sm font-semibold text-slate-800">{{ t('sidebar.layout') }}</h2>
+      <p class="mt-0.5 text-xs leading-relaxed text-slate-500">{{ t('sidebar.layoutHint') }}</p>
     </div>
     <draggable
       :list="layouts"

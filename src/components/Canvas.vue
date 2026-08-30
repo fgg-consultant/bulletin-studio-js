@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import draggable from 'vuedraggable'
 import { LayoutTemplate } from 'lucide-vue-next'
+import { t } from '../i18n'
 import { doc, ui } from '../store'
 import BlockRenderer from './BlockRenderer.vue'
 
@@ -32,8 +33,8 @@ const widths = { desktop: 'max-w-[980px]', pdf: 'max-w-[770px]', mobile: 'max-w-
           <div class="rounded-full border-2 border-dashed border-slate-300 p-4">
             <LayoutTemplate :size="28" />
           </div>
-          <p class="mt-1 font-medium text-slate-500">Votre bulletin est vide</p>
-          <p class="text-sm">Glissez un bloc depuis la barre latérale pour commencer.</p>
+          <p class="mt-1 font-medium text-slate-500">{{ t('canvas.empty') }}</p>
+          <p class="text-sm">{{ t('canvas.emptyHint') }}</p>
         </div>
       </div>
     </div>

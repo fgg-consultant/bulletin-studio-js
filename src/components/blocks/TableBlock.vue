@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Minus, Plus } from 'lucide-vue-next'
+import { t } from '../../i18n'
 import { pastePlain } from '../../store'
 import type { TableBlock } from '../../types'
 
@@ -55,13 +56,13 @@ const ctl =
     </table>
 
     <div v-if="selected" class="mt-2 flex flex-wrap items-center gap-1.5" @click.stop>
-      <button :class="ctl" @click="addRow"><Plus :size="12" /> Ligne</button>
-      <button :class="ctl" title="Supprimer la dernière ligne" @click="removeRow"><Minus :size="12" /> Ligne</button>
-      <button :class="ctl" @click="addCol"><Plus :size="12" /> Colonne</button>
-      <button :class="ctl" title="Supprimer la dernière colonne" @click="removeCol"><Minus :size="12" /> Colonne</button>
+      <button :class="ctl" @click="addRow"><Plus :size="12" /> {{ t('table.row') }}</button>
+      <button :class="ctl" :title="t('table.removeRow')" @click="removeRow"><Minus :size="12" /> {{ t('table.row') }}</button>
+      <button :class="ctl" @click="addCol"><Plus :size="12" /> {{ t('table.column') }}</button>
+      <button :class="ctl" :title="t('table.removeColumn')" @click="removeCol"><Minus :size="12" /> {{ t('table.column') }}</button>
       <label class="ml-1 flex items-center gap-1.5 text-xs font-medium text-slate-600">
         <input v-model="block.header" type="checkbox" class="accent-sky-700" />
-        Ligne d'en-tête
+        {{ t('table.headerRow') }}
       </label>
     </div>
   </div>

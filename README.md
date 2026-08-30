@@ -25,6 +25,21 @@ Routing par hash : `#/` dashboard (modèles et bulletins), `#/new` nouveau modè
 Un **modèle** est un bulletin marqué comme tel, rattaché à un produit climweb ; il sert de
 point de départ qu'on copie. Un **bulletin** est une parution publiable de ce produit.
 
+## Langues
+
+L'interface est traduite en anglais (langue source), français, espagnol, portugais et
+arabe : un catalogue par langue dans `src/locales/`, un `t()` maison dans `src/i18n.ts`
+(`Intl.PluralRules` pour les pluriels, `Intl.DateTimeFormat` pour les dates — pas de
+dépendance). La langue vient de climweb par `data-locale` sur le point de montage, donc
+l'app suit celle de l'admin wagtail ; le sens RTL est hérité du `dir` de l'admin. Les
+autres langues de climweb (am, sw) retombent sur l'anglais tant qu'aucun catalogue
+n'existe.
+
+Une clé absente d'un catalogue retombe sur l'anglais, et le type `Catalog` interdit
+d'inventer une clé. Les valeurs par défaut insérées dans le document (« Bulletin »,
+« Colonne 1 »…) sont traduites elles aussi : elles suivent la langue de l'auteur au
+moment où le bloc est créé.
+
 ## Modèle de données
 
 Le document est un arbre de blocs (`src/types.ts`) :

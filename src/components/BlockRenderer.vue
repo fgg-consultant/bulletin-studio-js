@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, type Component } from 'vue'
 import { Copy, GripVertical, Trash2 } from 'lucide-vue-next'
+import { t } from '../i18n'
 import { duplicateBlock, removeBlock, ui } from '../store'
 import type { Block } from '../types'
 import ButtonBlock from './blocks/ButtonBlock.vue'
@@ -47,13 +48,13 @@ const hovered = computed(() => ui.hoverId === props.block.id)
       v-show="selected || hovered"
       class="absolute -top-3.5 right-2 z-20 flex items-center overflow-hidden rounded-md border border-slate-200 bg-white shadow-md"
     >
-      <button class="drag-handle cursor-grab p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600 active:cursor-grabbing" title="Déplacer">
+      <button class="drag-handle cursor-grab p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600 active:cursor-grabbing" :title="t('block.move')">
         <GripVertical :size="15" />
       </button>
-      <button class="p-1.5 text-slate-500 hover:bg-slate-50 hover:text-sky-700" title="Dupliquer" @click.stop="duplicateBlock(block.id)">
+      <button class="p-1.5 text-slate-500 hover:bg-slate-50 hover:text-sky-700" :title="t('block.duplicate')" @click.stop="duplicateBlock(block.id)">
         <Copy :size="15" />
       </button>
-      <button class="p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600" title="Supprimer" @click.stop="removeBlock(block.id)">
+      <button class="p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600" :title="t('block.delete')" @click.stop="removeBlock(block.id)">
         <Trash2 :size="15" />
       </button>
     </div>

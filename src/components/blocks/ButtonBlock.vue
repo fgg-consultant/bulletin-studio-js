@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { AlignCenter, AlignLeft, AlignRight } from 'lucide-vue-next'
+import { t } from '../../i18n'
 import { pastePlain } from '../../store'
 import type { ButtonBlock } from '../../types'
 
@@ -35,8 +36,8 @@ const aligns = [
       <input
         v-model="block.href"
         name="button-href"
-        aria-label="Lien du bouton"
-        placeholder="https://lien-du-bouton…"
+        :aria-label="t('button.href')"
+        :placeholder="t('button.hrefPlaceholder')"
         class="min-w-0 flex-1 rounded border border-slate-200 px-2 py-1 text-xs focus:outline-1 focus:outline-sky-600"
       />
       <div class="flex rounded border border-slate-200 p-0.5">

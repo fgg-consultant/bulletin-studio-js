@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import { uid } from './store'
 import type { Block } from './types'
 
@@ -6,12 +7,12 @@ const image = (): Block => ({ id: uid(), type: 'image', src: null, alt: '', capt
 const header = (): Block => ({
   id: uid(),
   type: 'header',
-  eyebrow: 'Bulletin',
+  eyebrow: t('defaults.eyebrow'),
   title: '',
   subtitle: '',
   badges: [
-    { id: uid(), text: 'Valide du … au …' },
-    { id: uid(), text: 'Publié le …' },
+    { id: uid(), text: t('defaults.badgeValid') },
+    { id: uid(), text: t('defaults.badgePublished') },
   ],
   bg: '#175243',
 })
@@ -51,46 +52,46 @@ export interface Template {
 }
 
 export const templates: Template[] = [
-  { key: 'blank', label: 'Page vierge', preview: [], make: () => [] },
+  { key: 'blank', label: t('starters.blank'), preview: [], make: () => [] },
   {
     key: 'c1',
-    label: '1 colonne',
+    label: t('starters.c1'),
     preview: [{ t: 'title' }, { t: 'text' }, { t: 'img' }, { t: 'text' }],
     make: () => [text('heading'), text(), image(), text()],
   },
   {
     key: 'c1b',
-    label: '1 colonne · bandeau',
+    label: t('starters.c1band'),
     preview: [{ t: 'band' }, { t: 'text' }, { t: 'img' }, { t: 'text' }],
     make: () => [header(), text(), image(), text()],
   },
   {
     key: 'c12b',
-    label: '1 : 2 · bandeau',
+    label: t('starters.c12band'),
     preview: [{ t: 'band' }, { t: 'cols', r: [1, 2] }, { t: 'text' }],
     make: () => [header(), cols([1, 2], [[image], [text]]), text()],
   },
   {
     key: 'c2b',
-    label: '2 colonnes · bandeau',
+    label: t('starters.c2band'),
     preview: [{ t: 'band' }, { t: 'title' }, { t: 'cols', r: [1, 1] }, { t: 'text' }],
     make: () => [header(), text('heading'), cols([1, 1], [[text], [text]]), text()],
   },
   {
     key: 'c3b',
-    label: '3 colonnes · bandeau',
+    label: t('starters.c3band'),
     preview: [{ t: 'band' }, { t: 'title' }, { t: 'cols', r: [1, 1, 1] }],
     make: () => [header(), text('heading'), cols([1, 1, 1], [[text], [text], [text]])],
   },
   {
     key: 'c21',
-    label: '2 : 1',
+    label: t('starters.c21'),
     preview: [{ t: 'title' }, { t: 'cols', r: [2, 1] }, { t: 'text' }],
     make: () => [text('heading'), cols([2, 1], [[text], [image]]), text()],
   },
   {
     key: 'decadaire',
-    label: 'Bulletin décadaire',
+    label: t('starters.decadal'),
     preview: [{ t: 'band' }, { t: 'title' }, { t: 'text' }, { t: 'cols', r: [1, 1] }, { t: 'table' }],
     make: () => [
       header(),

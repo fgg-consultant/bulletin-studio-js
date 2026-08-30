@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, watch } from 'vue'
 import { Check, Download, ExternalLink, FileText, Monitor, Printer, Smartphone, Upload } from 'lucide-vue-next'
+import { t } from '../i18n'
 import { go } from '../router'
 import { doc, exportJson, exportPdf, openBulletin, publishCurrent, ui } from '../store'
 import Canvas from './Canvas.vue'
@@ -17,9 +18,9 @@ watch(
 )
 
 const modes = [
-  { v: 'desktop', icon: Monitor, title: 'Aperçu écran (large)' },
-  { v: 'pdf', icon: FileText, title: 'Aperçu PDF' },
-  { v: 'mobile', icon: Smartphone, title: 'Aperçu mobile' },
+  { v: 'desktop', icon: Monitor, title: 'editor.previewDesktop' },
+  { v: 'pdf', icon: FileText, title: 'editor.previewPdf' },
+  { v: 'mobile', icon: Smartphone, title: 'editor.previewMobile' },
 ] as const
 
 function onKey(e: KeyboardEvent) {
@@ -32,7 +33,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 <template>
   <div class="bs-app flex h-full flex-col bg-white text-slate-800 antialiased">
     <header class="flex h-14 shrink-0 items-center gap-3 border-b border-slate-200 px-4">
-      <a href="#/" class="flex items-center gap-2 rounded-md px-1 py-0.5 hover:bg-slate-50" title="Retour aux bulletins">
+      <a href="#/" class="flex items-center gap-2 rounded-md px-1 py-0.5 hover:bg-slate-50" :title="t('editor.back')">
         <div class="flex size-7 items-center justify-center rounded-md bg-sky-700 text-sm font-bold text-white">B</div>
         <span class="text-sm font-semibold tracking-tight">Bulletin Studio</span>
       </a>
@@ -40,23 +41,27 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       <input
         v-model="doc.title"
         name="title"
-        aria-label="Titre du bulletin"
+        :aria-label="t('editor.title')"
         class="w-64 rounded-md px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-white focus:outline-2 focus:outline-sky-600"
-        placeholder="Titre du bulletin"
+        :placeholder="t('editor.title')"
       />
       <span class="flex items-center gap-1 text-xs text-slate-400">
         <Check v-if="ui.saved" :size="13" />
-        {{ ui.saved ? 'Enregistré' : 'Enregistrement…' }}
+        {{ t(ui.saved ? 'editor.saved' : 'editor.saving') }}
       </span>
       <span
         v-if="doc.isTemplate"
         class="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700"
-        title="Un modèle sert de point de départ : il n'a pas de page publique."
+        :title="t('editor.templateHint')"
       >
-        Modèle
+        {{ t('status.template') }}
       </span>
       <span v-else class="text-xs font-medium" :class="doc.live ? 'text-emerald-700' : 'text-slate-400'">
-        {{ doc.live ? (doc.hasUnpublishedChanges ? 'Publié · modifications en attente' : 'Publié') : 'Brouillon' }}
+        {{
+          doc.live
+            ? t(doc.hasUnpublishedChanges ? 'status.publishedPending' : 'status.published')
+            : t('status.draft')
+        }}
       </span>
 
       <div class="ml-auto flex items-center gap-3">
@@ -66,7 +71,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             :key="m.v"
             class="rounded-md p-1.5"
             :class="ui.device === m.v ? 'bg-sky-50 text-sky-700' : 'text-slate-400 hover:text-slate-600'"
-            :title="m.title"
+            :title="t(m.title)"
             @click="ui.device = m.v"
           >
             <component :is="m.icon" :size="16" />
@@ -74,38 +79,38 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         </div>
         <button
           class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-          title="Télécharger le document en JSON"
+          :title="t('editor.jsonHint')"
           @click="exportJson"
         >
           <Download :size="15" />
-          JSON
+          {{ t('editor.json') }}
         </button>
         <button
           class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
           @click="exportPdf"
         >
           <Printer :size="15" />
-          PDF
+          {{ t('editor.pdf') }}
         </button>
         <a
           v-if="doc.url"
           :href="doc.url"
           target="_blank"
           class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-          title="Voir la page publiée dans climweb"
+          :title="t('editor.viewHint')"
         >
           <ExternalLink :size="15" />
-          Voir
+          {{ t('editor.view') }}
         </a>
         <button
           v-if="!doc.isTemplate"
           class="flex items-center gap-1.5 rounded-lg bg-sky-700 px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-50"
           :disabled="doc.live && !doc.hasUnpublishedChanges"
-          title="Publier dans la section Produits de climweb"
+          :title="t('editor.publishHint')"
           @click="publishCurrent"
         >
           <Upload :size="15" />
-          Publier
+          {{ t('editor.publish') }}
         </button>
       </div>
     </header>

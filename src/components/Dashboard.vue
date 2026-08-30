@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { ExternalLink, FileText, LayoutTemplate, Plus, Trash2 } from 'lucide-vue-next'
 import * as api from '../api'
 import { go } from '../router'
+import { formatDateTime, t } from '../i18n'
 import { createFromTemplate, deleteBulletin } from '../store'
 
 const items = ref<api.BulletinMeta[]>([])
@@ -22,8 +23,6 @@ async function refresh() {
 }
 onMounted(refresh)
 
-const fmt = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' })
-
 async function newIssue(templateId: number) {
   busy.value = true
   try {
@@ -36,8 +35,8 @@ async function newIssue(templateId: number) {
 }
 
 async function remove(b: api.BulletinMeta) {
-  const what = b.isTemplate ? 'le modèle' : 'le bulletin'
-  if (!confirm(`Supprimer ${what} « ${b.title} » ? Cette action est définitive.`)) return
+  const key = b.isTemplate ? 'dashboard.confirmDeleteTemplate' : 'dashboard.confirmDeleteBulletin'
+  if (!confirm(t(key, { title: b.title }))) return
   try {
     await deleteBulletin(b.id)
     await refresh()
@@ -57,7 +56,7 @@ async function remove(b: api.BulletinMeta) {
         class="ml-auto flex items-center gap-1.5 rounded-lg bg-sky-700 px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-sky-800"
       >
         <Plus :size="15" />
-        Nouveau modèle
+        {{ t('dashboard.newTemplate') }}
       </a>
     </header>
 
@@ -65,41 +64,38 @@ async function remove(b: api.BulletinMeta) {
 
     <main class="min-h-0 flex-1 overflow-y-auto">
       <div class="mx-auto max-w-3xl px-6 py-10">
-        <h1 class="text-xl font-bold tracking-tight text-slate-900">Modèles</h1>
-        <p class="mt-1 text-sm text-slate-500">
-          Un modèle est un point de départ, rattaché à un produit climweb. Les bulletins qui en
-          sont issus deviennent des parutions de ce produit.
-        </p>
+        <h1 class="text-xl font-bold tracking-tight text-slate-900">{{ t('dashboard.templates') }}</h1>
+        <p class="mt-1 text-sm text-slate-500">{{ t('dashboard.templatesIntro') }}</p>
 
         <div v-if="templates.length" class="mt-5 flex flex-col gap-2.5">
           <div
-            v-for="t in templates"
-            :key="t.id"
+            v-for="tpl in templates"
+            :key="tpl.id"
             class="group flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4"
           >
-            <a :href="`#/b/${t.id}`" class="flex min-w-0 flex-1 items-center gap-4">
+            <a :href="`#/b/${tpl.id}`" class="flex min-w-0 flex-1 items-center gap-4">
               <div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
                 <LayoutTemplate :size="18" />
               </div>
               <div class="min-w-0 flex-1">
-                <div class="truncate font-semibold text-slate-800">{{ t.title }}</div>
+                <div class="truncate font-semibold text-slate-800">{{ tpl.title }}</div>
                 <div class="mt-0.5 text-xs text-slate-500">
-                  {{ t.parentTitle }} · {{ t.blockCount }} bloc{{ t.blockCount > 1 ? 's' : '' }}
+                  {{ tpl.parentTitle }} · {{ t('dashboard.blockCount', { count: tpl.blockCount }) }}
                 </div>
               </div>
             </a>
             <button
               class="flex items-center gap-1.5 rounded-lg border border-sky-700 px-3 py-1.5 text-sm font-semibold text-sky-700 hover:bg-sky-50 disabled:opacity-50"
               :disabled="busy"
-              @click="newIssue(t.id)"
+              @click="newIssue(tpl.id)"
             >
               <Plus :size="14" />
-              Nouveau bulletin
+              {{ t('dashboard.newBulletin') }}
             </button>
             <button
               class="rounded-md p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
-              title="Supprimer ce modèle"
-              @click="remove(t)"
+              :title="t('dashboard.deleteTemplate')"
+              @click="remove(tpl)"
             >
               <Trash2 :size="16" />
             </button>
@@ -111,23 +107,20 @@ async function remove(b: api.BulletinMeta) {
           class="mt-5 flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-slate-300 bg-white px-6 py-12 text-center"
         >
           <div class="rounded-full bg-amber-50 p-4 text-amber-700"><LayoutTemplate :size="24" /></div>
-          <p class="font-medium text-slate-700">Aucun modèle pour l'instant</p>
-          <p class="max-w-sm text-sm text-slate-500">
-            Créez un modèle, choisissez le produit climweb qui l'accueille, puis composez-le par
-            glisser-déposer.
-          </p>
+          <p class="font-medium text-slate-700">{{ t('dashboard.noTemplates') }}</p>
+          <p class="max-w-sm text-sm text-slate-500">{{ t('dashboard.noTemplatesHint') }}</p>
           <a
             href="#/new"
             class="mt-2 flex items-center gap-1.5 rounded-lg bg-sky-700 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-800"
           >
             <Plus :size="15" />
-            Créer un modèle
+            {{ t('dashboard.createTemplate') }}
           </a>
         </div>
 
-        <h2 class="mt-12 text-xl font-bold tracking-tight text-slate-900">Bulletins</h2>
+        <h2 class="mt-12 text-xl font-bold tracking-tight text-slate-900">{{ t('dashboard.bulletins') }}</h2>
         <p class="mt-1 text-sm text-slate-500">
-          {{ issues.length }} bulletin{{ issues.length > 1 ? 's' : '' }}.
+          {{ t('dashboard.bulletinCount', { count: issues.length }) }}
         </p>
 
         <div v-if="issues.length" class="mt-5 flex flex-col gap-2.5">
@@ -144,7 +137,9 @@ async function remove(b: api.BulletinMeta) {
                 <div class="truncate font-semibold text-slate-800 group-hover:text-sky-800">{{ b.title }}</div>
                 <div class="mt-0.5 text-xs text-slate-500">
                   {{ b.parentTitle }}
-                  <template v-if="b.updatedAt"> · modifié le {{ fmt.format(b.updatedAt) }}</template>
+                  <template v-if="b.updatedAt">
+                    · {{ t('dashboard.modifiedOn', { date: formatDateTime(b.updatedAt) }) }}
+                  </template>
                 </div>
               </div>
             </a>
@@ -152,20 +147,24 @@ async function remove(b: api.BulletinMeta) {
               class="rounded-full px-2 py-0.5 text-xs font-medium"
               :class="b.live ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'"
             >
-              {{ b.live ? (b.hasUnpublishedChanges ? 'Publié · en attente' : 'Publié') : 'Brouillon' }}
+              {{
+                b.live
+                  ? t(b.hasUnpublishedChanges ? 'status.publishedPendingShort' : 'status.published')
+                  : t('status.draft')
+              }}
             </span>
             <a
               v-if="b.url"
               :href="b.url"
               target="_blank"
               class="rounded-md p-2 text-slate-400 hover:bg-slate-100 hover:text-sky-700"
-              title="Voir la page publiée"
+              :title="t('dashboard.viewPublished')"
             >
               <ExternalLink :size="16" />
             </a>
             <button
               class="rounded-md p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
-              title="Supprimer ce bulletin"
+              :title="t('dashboard.deleteBulletin')"
               @click="remove(b)"
             >
               <Trash2 :size="16" />
@@ -173,7 +172,7 @@ async function remove(b: api.BulletinMeta) {
           </div>
         </div>
         <p v-else class="mt-5 rounded-lg border border-dashed border-slate-300 bg-white px-6 py-8 text-center text-sm text-slate-500">
-          Aucun bulletin. Créez-en un depuis un modèle ci-dessus.
+          {{ t('dashboard.noBulletins') }}
         </p>
       </div>
     </main>

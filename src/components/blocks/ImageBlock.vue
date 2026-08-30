@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { Image as ImageIcon, RefreshCw, X } from 'lucide-vue-next'
 import { pastePlain } from '../../store'
+import { t } from '../../i18n'
 import type { ImageBlock } from '../../types'
 
 const props = defineProps<{ block: ImageBlock; selected: boolean }>()
@@ -37,15 +38,15 @@ function onFile(e: Event) {
         class="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
         @click="file?.click()"
       >
-        Choisir une image
+        {{ t('image.choose') }}
       </button>
       <div class="flex items-center gap-1.5 text-xs text-slate-500">
-        ou
+        {{ t('image.or') }}
         <input
           v-model="url"
           name="image-url"
-          aria-label="URL de l'image"
-          placeholder="coller une URL puis Entrée"
+          :aria-label="t('image.url')"
+          :placeholder="t('image.urlPlaceholder')"
           class="w-48 rounded border border-slate-200 bg-white px-2 py-1 focus:outline-1 focus:outline-sky-600"
           @click.stop
           @keydown.enter="url && (block.src = url)"
@@ -59,7 +60,7 @@ function onFile(e: Event) {
         v-init-text="block.caption ?? ''"
         contenteditable="true"
         spellcheck="false"
-        data-placeholder="Ajouter une légende…"
+        :data-placeholder="t('image.caption')"
         class="mt-1.5 text-center text-xs leading-relaxed text-slate-500 italic outline-none"
         @click.stop
         @input="block.caption = ($event.target as HTMLElement).textContent ?? ''"
@@ -70,15 +71,15 @@ function onFile(e: Event) {
         <input
           v-model="block.alt"
           name="image-alt"
-          aria-label="Texte alternatif de l'image"
-          placeholder="Texte alternatif"
+          :aria-label="t('image.altLabel')"
+          :placeholder="t('image.alt')"
           class="min-w-0 flex-1 rounded border border-slate-200 px-2 py-1 text-xs focus:outline-1 focus:outline-sky-600"
         />
         <button class="flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100" @click="file?.click()">
-          <RefreshCw :size="12" /> Remplacer
+          <RefreshCw :size="12" /> {{ t('image.replace') }}
         </button>
         <button class="flex items-center gap-1 rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50" @click="block.src = null">
-          <X :size="12" /> Retirer
+          <X :size="12" /> {{ t('image.remove') }}
         </button>
       </div>
     </figure>
