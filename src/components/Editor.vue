@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, watch } from 'vue'
-import { Check, Download, ExternalLink, FileText, Monitor, Printer, Smartphone, Upload } from 'lucide-vue-next'
+import { AlarmClock, Check, Download, ExternalLink, FileText, Monitor, Printer, Smartphone, Upload } from 'lucide-vue-next'
+import { siteTimeZone } from '../api'
 import { t } from '../i18n'
 import { go } from '../router'
 import { doc, exportJson, exportPdf, openBulletin, publishCurrent, ui } from '../store'
@@ -56,6 +57,24 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       >
         {{ t('status.template') }}
       </span>
+      <label
+        v-if="doc.isTemplate"
+        class="flex items-center gap-1.5 text-xs whitespace-nowrap text-slate-500"
+        :title="t('editor.dailyDraftHint', { tz: siteTimeZone })"
+      >
+        <AlarmClock :size="14" class="text-slate-400" />
+        {{ t('editor.dailyDraft') }}
+        <!-- par quart d'heure : le serveur prépare les brouillons à :00, :15, :30, :45.
+             Les ! : input[type=time] de wagtail est plus spécifique qu'une classe -->
+        <input
+          v-model="doc.dailyDraftAt"
+          type="time"
+          step="900"
+          name="daily-draft"
+          class="min-h-0! w-auto! rounded border border-slate-200 px-1.5! py-0.5! text-xs! text-slate-700 focus:outline-1 focus:outline-sky-600"
+        />
+        <span class="text-slate-400">{{ siteTimeZone }}</span>
+      </label>
       <span v-else class="text-xs font-medium" :class="doc.live ? 'text-emerald-700' : 'text-slate-400'">
         {{
           doc.live

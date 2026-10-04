@@ -19,6 +19,7 @@ const pt: Catalog = {
     viewPublished: 'Ver a página publicada',
     modifiedOn: 'modificado em {date}',
     blockCount: { one: '{count} bloco', other: '{count} blocos' },
+    dailyDraft: 'rascunho diário às {time}',
     confirmDeleteTemplate: 'Eliminar o modelo «{title}»? Esta ação é irreversível.',
     confirmDeleteBulletin: 'Eliminar o boletim «{title}»? Esta ação é irreversível.',
   },
@@ -59,6 +60,8 @@ const pt: Catalog = {
     publishHint: 'Publicar na secção Produtos do ClimWeb',
     fileName: 'boletim',
     untitled: 'Boletim sem título',
+    dailyDraft: 'Rascunho diário às',
+    dailyDraftHint: 'Todos os dias a esta hora ({tz}), é preparado um rascunho de boletim a partir deste modelo, com os mapas de previsão fixados. Vazio: sem rascunho diário.',
   },
   block: { move: 'Mover', duplicate: 'Duplicar', delete: 'Eliminar' },
   canvas: {

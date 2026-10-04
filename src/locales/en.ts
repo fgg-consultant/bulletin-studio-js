@@ -19,6 +19,7 @@ const en = {
     viewPublished: 'View the published page',
     modifiedOn: 'modified on {date}',
     blockCount: { one: '{count} block', other: '{count} blocks' },
+    dailyDraft: 'daily draft at {time}',
     confirmDeleteTemplate: 'Delete the template “{title}”? This cannot be undone.',
     confirmDeleteBulletin: 'Delete the bulletin “{title}”? This cannot be undone.',
   },
@@ -58,6 +59,8 @@ const en = {
     publishHint: 'Publish to ClimWeb’s Products section',
     fileName: 'bulletin',
     untitled: 'Untitled bulletin',
+    dailyDraft: 'Daily draft at',
+    dailyDraftHint: 'Each day at this time ({tz}), a draft bulletin is prepared from this template, its forecast maps frozen. Empty: no daily draft.',
   },
   block: {
     move: 'Move',

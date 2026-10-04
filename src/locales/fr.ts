@@ -19,6 +19,7 @@ const fr: Catalog = {
     viewPublished: 'Voir la page publiée',
     modifiedOn: 'modifié le {date}',
     blockCount: { one: '{count} bloc', other: '{count} blocs' },
+    dailyDraft: 'brouillon quotidien à {time}',
     confirmDeleteTemplate: 'Supprimer le modèle « {title} » ? Cette action est définitive.',
     confirmDeleteBulletin: 'Supprimer le bulletin « {title} » ? Cette action est définitive.',
   },
@@ -59,6 +60,8 @@ const fr: Catalog = {
     publishHint: 'Publier dans la section Produits de climweb',
     fileName: 'bulletin',
     untitled: 'Bulletin sans titre',
+    dailyDraft: 'Brouillon quotidien à',
+    dailyDraftHint: 'Chaque jour à cette heure ({tz}), un brouillon de bulletin est préparé à partir de ce modèle, ses cartes de prévision figées. Vide : pas de brouillon quotidien.',
   },
   block: { move: 'Déplacer', duplicate: 'Dupliquer', delete: 'Supprimer' },
   canvas: {

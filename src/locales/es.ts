@@ -19,6 +19,7 @@ const es: Catalog = {
     viewPublished: 'Ver la página publicada',
     modifiedOn: 'modificado el {date}',
     blockCount: { one: '{count} bloque', other: '{count} bloques' },
+    dailyDraft: 'borrador diario a las {time}',
     confirmDeleteTemplate: '¿Eliminar la plantilla «{title}»? Esta acción es irreversible.',
     confirmDeleteBulletin: '¿Eliminar el boletín «{title}»? Esta acción es irreversible.',
   },
@@ -60,6 +61,8 @@ const es: Catalog = {
     publishHint: 'Publicar en la sección Productos de ClimWeb',
     fileName: 'boletin',
     untitled: 'Boletín sin título',
+    dailyDraft: 'Borrador diario a las',
+    dailyDraftHint: 'Cada día a esta hora ({tz}) se prepara un borrador de boletín a partir de esta plantilla, con sus mapas de pronóstico fijados. Vacío: sin borrador diario.',
   },
   block: { move: 'Mover', duplicate: 'Duplicar', delete: 'Eliminar' },
   canvas: {

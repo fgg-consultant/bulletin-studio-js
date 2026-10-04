@@ -10,6 +10,9 @@ const IMAGES = mount?.dataset.imagesUrl ?? ''
 const MAP_CONFIG = mount?.dataset.mapConfigUrl ?? ''
 // seulement sur un climweb météorologique (forecastmanager installé)
 const FORECAST = mount?.dataset.forecastUrl ?? ''
+
+/** le fuseau du site : celui du brouillon quotidien, pas forcément celui du navigateur */
+export const siteTimeZone = mount?.dataset.timeZone ?? ''
 const CSRF = mount?.dataset.csrfToken ?? ''
 
 export interface BulletinMeta {
@@ -18,6 +21,9 @@ export interface BulletinMeta {
   isTemplate: boolean
   /** la date du numéro (« Effective from » de climweb), ISO YYYY-MM-DD */
   date: string | null
+  /** un modèle seulement : chaque jour à cette heure (HH:MM, heure du site), un
+   *  brouillon de numéro est préparé */
+  dailyDraftAt: string | null
   /** pk de la ProductPage hôte : les parutions d'un modèle la partagent */
   parent: number
   parentTitle: string
@@ -57,6 +63,8 @@ export interface BulletinPayload {
   doc: { blocks: Block[] }
   html: string
   isTemplate: boolean
+  /** un modèle seulement ; absent, le serveur n'y touche pas */
+  dailyDraftAt?: string | null
   /** requis à la création uniquement */
   parent?: number
 }

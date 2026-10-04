@@ -15,6 +15,8 @@ export interface BulletinDoc {
   isTemplate: boolean
   /** la date du numéro : les cartes de prévision et la « date du numéro » la suivent */
   date: string | null
+  /** un modèle seulement : l'heure du brouillon quotidien, ou null */
+  dailyDraftAt: string | null
   /** la ProductPage hôte — les parutions d'un modèle la partagent */
   parent: number | null
   live: boolean
@@ -23,7 +25,7 @@ export interface BulletinDoc {
 }
 
 export const doc = reactive<BulletinDoc>({
-  id: null, title: '', blocks: [], isTemplate: false, date: null,
+  id: null, title: '', blocks: [], isTemplate: false, date: null, dailyDraftAt: null,
   parent: null, live: false, hasUnpublishedChanges: false, url: null,
 })
 
@@ -42,6 +44,7 @@ function payload(): api.BulletinPayload {
     doc: { blocks: doc.blocks },
     html: renderHtml(doc.blocks, { issueDate: doc.isTemplate ? null : doc.date }),
     isTemplate: doc.isTemplate,
+    ...(doc.isTemplate ? { dailyDraftAt: doc.dailyDraftAt } : {}),
   }
 }
 
@@ -56,6 +59,7 @@ function apply(b: api.BulletinFull | api.BulletinMeta, blocks?: Block[]) {
   if (blocks) doc.blocks = blocks
   doc.isTemplate = b.isTemplate
   doc.date = b.date
+  doc.dailyDraftAt = b.dailyDraftAt
   doc.parent = b.parent
   doc.live = b.live
   doc.hasUnpublishedChanges = b.hasUnpublishedChanges

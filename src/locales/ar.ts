@@ -21,6 +21,7 @@ const ar: Catalog = {
     viewPublished: 'عرض الصفحة المنشورة',
     modifiedOn: 'عُدّلت في {date}',
     blockCount: { one: 'كتلة واحدة', other: '{count} كتلة' },
+    dailyDraft: 'مسودة يومية في {time}',
     confirmDeleteTemplate: 'حذف القالب «{title}»؟ لا يمكن التراجع عن هذا الإجراء.',
     confirmDeleteBulletin: 'حذف النشرة «{title}»؟ لا يمكن التراجع عن هذا الإجراء.',
   },
@@ -60,6 +61,8 @@ const ar: Catalog = {
     publishHint: 'النشر في قسم المنتجات في ClimWeb',
     fileName: 'nashra',
     untitled: 'نشرة بلا عنوان',
+    dailyDraft: 'مسودة يومية في',
+    dailyDraftHint: 'كل يوم في هذه الساعة ({tz})، تُعدّ مسودة نشرة من هذا القالب مع تثبيت خرائط التوقعات. اتركه فارغًا لعدم إعداد مسودة يومية.',
   },
   block: { move: 'نقل', duplicate: 'تكرار', delete: 'حذف' },
   canvas: {
