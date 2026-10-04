@@ -3,6 +3,7 @@ import { nextTick } from 'vue'
 import draggable from 'vuedraggable'
 import {
   Calendar,
+  CloudSun,
   Heading1,
   Image as ImageIcon,
   Map as MapIcon,
@@ -13,6 +14,7 @@ import {
   Table,
   Type,
 } from 'lucide-vue-next'
+import { hasForecast } from '../api'
 import { t } from '../i18n'
 import { doc, ui, uid } from '../store'
 import type { Block, BlockType } from '../types'
@@ -57,6 +59,19 @@ const content: PaletteItem[] = [
       time: null, legend: null, bounds: null, height: 'md',
     }),
   },
+  // la carte de prévision de climweb : seulement là où forecastmanager tourne
+  ...(hasForecast
+    ? [{
+        key: 'forecast',
+        label: t('sidebar.forecast'),
+        type: 'forecast',
+        icon: CloudSun,
+        create: (): Block => ({
+          id: uid(), type: 'forecast', period: null, preset: 'bulletin', dayOffset: 0,
+          date: null, src: null, imageId: null, version: null, periodLabel: '', alt: '', caption: '',
+        }),
+      } satisfies PaletteItem]
+    : []),
   { key: 'image', label: t('sidebar.image'), type: 'image', icon: ImageIcon, create: () => ({ id: uid(), type: 'image', src: null, alt: '', caption: '' }) },
   { key: 'button', label: t('sidebar.button'), type: 'button', icon: MousePointerClick, create: () => ({ id: uid(), type: 'button', label: t('defaults.button'), href: '', align: 'center' }) },
   {

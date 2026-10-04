@@ -3,6 +3,7 @@ import type { Legend } from './map'
 export type BlockType =
   | 'header'
   | 'map'
+  | 'forecast'
   | 'text'
   | 'image'
   | 'button'
@@ -25,6 +26,9 @@ export interface DateBlock {
   type: 'date'
   /** format ISO YYYY-MM-DD */
   date: string
+  /** « date du numéro » : affiche la date de la parution plutôt que `date` —
+   *  un modèle la pose une fois, chaque numéro montre la sienne */
+  issueDate?: boolean
   align: 'left' | 'center' | 'right'
 }
 
@@ -104,6 +108,30 @@ export interface MapBlock {
   height: 'sm' | 'md' | 'lg'
 }
 
+/** La carte de prévision dessinée par climweb après chaque pull de prévisions.
+ *  Dans un modèle, le bloc n'est qu'une recette ; un numéro y fige l'image du jour,
+ *  promue dans la bibliothèque climweb — la carte du serveur, elle, est redessinée
+ *  au pull suivant. */
+export interface ForecastBlock {
+  id: string
+  type: 'forecast'
+  /** recette : le créneau (HH:MM) parmi ceux que l'office a réglés, null = le premier */
+  period: string | null
+  preset: string
+  /** jours après la date du numéro : 0 la carte du jour, 1 celle du lendemain… */
+  dayOffset: number
+  /** figé dans un numéro : la date de la prévision et l'image de la bibliothèque */
+  date: string | null
+  src: string | null
+  imageId: number | null
+  /** sha1 du PNG figé : une autre version côté serveur propose « Actualiser » */
+  version: string | null
+  periodLabel: string
+  /** vide : un texte alternatif construit à partir du créneau et de la date */
+  alt: string
+  caption: string
+}
+
 export type Block =
   | HeaderBlock
   | TextBlock
@@ -115,3 +143,4 @@ export type Block =
   | SpacerBlock
   | ColumnsBlock
   | MapBlock
+  | ForecastBlock

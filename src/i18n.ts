@@ -49,6 +49,12 @@ const dateOnly = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long'
 const dateTime = new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short' })
 
 export const formatDate = (d: Date) => dateOnly.format(d)
+/** une date ISO `YYYY-MM-DD`, lue à minuit local (`new Date(iso)` la lirait en UTC et
+ *  afficherait la veille à l'ouest de Greenwich) ; '' si elle est vide ou invalide */
+export function formatDay(iso: string | null | undefined): string {
+  const d = new Date(`${iso}T00:00:00`)
+  return iso && !isNaN(d.getTime()) ? formatDate(d) : ''
+}
 export const formatDateTime = (d: Date | number) => dateTime.format(d)
 
 // le libellé de dépôt d'une colonne vide vit dans un ::after : il passe par une

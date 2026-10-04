@@ -7,6 +7,7 @@ import type { Block } from '../types'
 import ButtonBlock from './blocks/ButtonBlock.vue'
 import DateBlock from './blocks/DateBlock.vue'
 import DividerBlock from './blocks/DividerBlock.vue'
+import ForecastBlock from './blocks/ForecastBlock.vue'
 import HeaderBlock from './blocks/HeaderBlock.vue'
 import ImageBlock from './blocks/ImageBlock.vue'
 import MapBlock from './blocks/MapBlock.vue'
@@ -24,6 +25,7 @@ const comps: Record<Block['type'], Component> = {
   text: TextBlock,
   image: ImageBlock,
   map: MapBlock,
+  forecast: ForecastBlock,
   button: ButtonBlock,
   table: TableBlock,
   date: DateBlock,

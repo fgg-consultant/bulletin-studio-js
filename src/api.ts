@@ -8,12 +8,16 @@ const API = mount?.dataset.apiUrl ?? ''
 const PRODUCT_PAGES = mount?.dataset.productPagesUrl ?? ''
 const IMAGES = mount?.dataset.imagesUrl ?? ''
 const MAP_CONFIG = mount?.dataset.mapConfigUrl ?? ''
+// seulement sur un climweb météorologique (forecastmanager installé)
+const FORECAST = mount?.dataset.forecastUrl ?? ''
 const CSRF = mount?.dataset.csrfToken ?? ''
 
 export interface BulletinMeta {
   id: number
   title: string
   isTemplate: boolean
+  /** la date du numéro (« Effective from » de climweb), ISO YYYY-MM-DD */
+  date: string | null
   /** pk de la ProductPage hôte : les parutions d'un modèle la partagent */
   parent: number
   parentTitle: string
@@ -140,3 +144,43 @@ export interface TileJson {
 }
 
 export const tileJson = (url: string) => call<TileJson>(url)
+
+/** sans forecastmanager, le bloc prévision n'existe pas */
+export const hasForecast = Boolean(FORECAST)
+
+/** Une carte de prévision telle que le serveur la garde : le dernier rendu du
+ *  créneau, réécrit à chaque pull. `version` est le sha1 du PNG. */
+export interface ForecastMap {
+  date: string
+  period: string
+  preset: string
+  url: string
+  version: string
+  renderedAt: number
+}
+
+export interface ForecastOptions {
+  /** aujourd'hui pour le site, pas pour le navigateur */
+  today: string
+  daysAhead: number
+  /** les créneaux que l'office publie comme prévision du jour */
+  periods: { time: string; label: string }[]
+  presets: string[]
+  /** celles dessinées, de la date demandée à `daysAhead` jours plus tard */
+  maps: ForecastMap[]
+}
+
+export const forecastMaps = (date?: string | null) =>
+  call<ForecastOptions>(FORECAST + (date ? `?date=${encodeURIComponent(date)}` : ''))
+
+/** La carte du moment, copiée dans la bibliothèque : l'image que le numéro fige. */
+export interface PromotedForecast extends StoredImage {
+  date: string
+  period: string
+  periodLabel: string
+  preset: string
+  version: string
+}
+
+export const promoteForecast = (date: string, period: string, preset: string) =>
+  call<PromotedForecast>(FORECAST, { method: 'POST', body: JSON.stringify({ date, period, preset }) })

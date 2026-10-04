@@ -6,11 +6,21 @@
  * l'éditeur charge, donc ce que l'auteur compose est ce que le site affiche. */
 import { $generateHtmlFromNodes } from '@lexical/html'
 import { $getRoot, createEditor } from 'lexical'
-import { formatDate } from './i18n'
+import { formatDay, t } from './i18n'
 import { esc } from './esc'
 import { nodes, theme } from './lexical'
 import { legendHtml, MAP_HEIGHTS } from './map'
-import type { Block } from './types'
+import type { Block, ForecastBlock } from './types'
+
+/** Ce que le html doit au numéro et pas au document : un modèle n'en a pas. */
+export interface RenderContext {
+  /** la date du numéro, ISO YYYY-MM-DD */
+  issueDate?: string | null
+}
+
+/** le texte alternatif d'une carte de prévision quand l'auteur n'en a pas écrit */
+export const forecastAlt = (b: ForecastBlock) =>
+  b.alt.trim() || t('forecast.alt', { period: b.periodLabel || b.period || '', date: formatDay(b.date) })
 
 /** état Lexical sérialisé → HTML. L'éditeur jetable partage le thème et les nœuds
  *  des blocs texte : mêmes classes en sortie qu'à la saisie. */
@@ -38,7 +48,7 @@ function isDark(hex: string): boolean {
 
 const SPACER = { sm: '16px', md: '32px', lg: '64px' }
 
-function block(b: Block): string {
+function block(b: Block, ctx: RenderContext): string {
   switch (b.type) {
     case 'header': {
       const badges = b.badges
@@ -82,9 +92,15 @@ function block(b: Block): string {
       return `<table class="bs-table"><tbody>${rows}</tbody></table>`
     }
     case 'date': {
-      const d = new Date(b.date + 'T00:00:00')
-      if (isNaN(d.getTime())) return ''
-      return `<div class="bs-date" style="text-align:${esc(b.align)}">${esc(formatDate(d))}</div>`
+      const day = formatDay(b.issueDate && ctx.issueDate ? ctx.issueDate : b.date)
+      if (!day) return ''
+      return `<div class="bs-date" style="text-align:${esc(b.align)}">${esc(day)}</div>`
+    }
+    case 'forecast': {
+      // une image comme les autres : rien à hydrater sur la page publiée
+      if (!b.src) return ''
+      const caption = b.caption?.trim() ? `<figcaption class="bs-caption">${esc(b.caption)}</figcaption>` : ''
+      return `<figure class="bs-figure bs-forecast"><img src="${esc(b.src)}" alt="${esc(forecastAlt(b))}">${caption}</figure>`
     }
     case 'map': {
       if (!b.tiles) return ''
@@ -106,13 +122,13 @@ function block(b: Block): string {
       return `<div class="bs-spacer" style="height:${SPACER[b.size]}"></div>`
     case 'columns': {
       const cols = b.columns
-        .map((col, i) => `<div class="bs-col" style="flex-grow:${b.ratios[i] ?? 1}">${col.map(block).join('')}</div>`)
+        .map((col, i) => `<div class="bs-col" style="flex-grow:${b.ratios[i] ?? 1}">${col.map((c) => block(c, ctx)).join('')}</div>`)
         .join('')
       return `<div class="bs-cols${b.columns.length > 2 ? ' bs-cols-many' : ''}">${cols}</div>`
     }
   }
 }
 
-export function renderHtml(blocks: Block[]): string {
-  return blocks.map(block).join('')
+export function renderHtml(blocks: Block[], ctx: RenderContext = {}): string {
+  return blocks.map((b) => block(b, ctx)).join('')
 }

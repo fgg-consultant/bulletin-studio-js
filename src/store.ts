@@ -13,6 +13,8 @@ export interface BulletinDoc {
   blocks: Block[]
   /** un modèle est un simple point de départ : jamais publié, jamais public */
   isTemplate: boolean
+  /** la date du numéro : les cartes de prévision et la « date du numéro » la suivent */
+  date: string | null
   /** la ProductPage hôte — les parutions d'un modèle la partagent */
   parent: number | null
   live: boolean
@@ -21,7 +23,7 @@ export interface BulletinDoc {
 }
 
 export const doc = reactive<BulletinDoc>({
-  id: null, title: '', blocks: [], isTemplate: false,
+  id: null, title: '', blocks: [], isTemplate: false, date: null,
   parent: null, live: false, hasUnpublishedChanges: false, url: null,
 })
 
@@ -38,7 +40,7 @@ function payload(): api.BulletinPayload {
   return {
     title: doc.title,
     doc: { blocks: doc.blocks },
-    html: renderHtml(doc.blocks),
+    html: renderHtml(doc.blocks, { issueDate: doc.isTemplate ? null : doc.date }),
     isTemplate: doc.isTemplate,
   }
 }
@@ -53,6 +55,7 @@ function apply(b: api.BulletinFull | api.BulletinMeta, blocks?: Block[]) {
   doc.title = b.title
   if (blocks) doc.blocks = blocks
   doc.isTemplate = b.isTemplate
+  doc.date = b.date
   doc.parent = b.parent
   doc.live = b.live
   doc.hasUnpublishedChanges = b.hasUnpublishedChanges
@@ -125,11 +128,14 @@ export async function deleteBulletin(id: number) {
   }
 }
 
-/** publie la parution courante : le html enregistré devient la page publique */
+/** publie la parution courante : le html enregistré devient la page publique.
+ *  Toujours ré-enregistré avant : le html d'un numéro préparé par le serveur n'a
+ *  jamais été rendu, seul le studio sait le faire. */
 export async function publishCurrent() {
   if (!doc.id || doc.isTemplate) return
   clearTimeout(saveTimer)
-  if (!ui.saved) await persist()
+  await persist()
+  if (ui.error) return // ne pas publier une version que l'enregistrement a refusée
   try {
     apply(await api.publish(doc.id))
     ui.error = null
