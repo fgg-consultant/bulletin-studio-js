@@ -52,7 +52,7 @@ function edit(e: Event, key: 'eyebrow' | 'title' | 'subtitle') {
       contenteditable="true"
       spellcheck="false"
       :data-placeholder="t('header.title')"
-      class="mt-4 text-4xl leading-tight font-extrabold tracking-tight outline-none"
+      class="mt-4 text-4xl leading-tight font-extrabold tracking-tight text-inherit outline-none"
       @input="edit($event, 'title')"
       @paste="pastePlain"
       @keydown.enter.prevent

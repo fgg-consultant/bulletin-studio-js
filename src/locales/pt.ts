@@ -189,6 +189,7 @@ const pt: Catalog = {
     c3band: '3 colunas · faixa',
     c21: '2 : 1',
     decadal: 'Boletim decendial',
+    daily: 'Previsão diária',
   },
 }
 

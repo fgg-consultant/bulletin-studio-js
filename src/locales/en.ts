@@ -203,6 +203,7 @@ const en = {
     c3band: '3 columns · banner',
     c21: '2 : 1',
     decadal: 'Decadal bulletin',
+    daily: 'Daily weather',
   },
 } as const
 

@@ -73,6 +73,14 @@ export const create = (payload: BulletinPayload) =>
 export const update = (id: number, payload: BulletinPayload) =>
   call<BulletinFull>(`${API}${id}/`, { method: 'PUT', body: JSON.stringify(payload) })
 
+/** un nouveau numéro du modèle, préparé par le serveur : cartes de prévision figées
+ *  pour sa date (aujourd'hui pour le site, par défaut) */
+export const createIssue = (templateId: number, date?: string) =>
+  call<BulletinFull>(`${API}${templateId}/issues/`, {
+    method: 'POST',
+    body: JSON.stringify(date ? { date } : {}),
+  })
+
 export const publish = (id: number) =>
   call<BulletinMeta>(`${API}${id}/publish/`, { method: 'POST' })
 

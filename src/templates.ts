@@ -1,19 +1,22 @@
+import { hasForecast } from './api'
 import { t } from './i18n'
 import { uid } from './store'
 import type { Block } from './types'
 
 const text = (preset: 'heading' | 'text' = 'text'): Block => ({ id: uid(), type: 'text', preset, state: null })
 const image = (): Block => ({ id: uid(), type: 'image', src: null, alt: '', caption: '' })
-const header = (): Block => ({
+const header = (title = '', badges = true): Block => ({
   id: uid(),
   type: 'header',
   eyebrow: t('defaults.eyebrow'),
-  title: '',
+  title,
   subtitle: '',
-  badges: [
-    { id: uid(), text: t('defaults.badgeValid') },
-    { id: uid(), text: t('defaults.badgePublished') },
-  ],
+  badges: badges
+    ? [
+        { id: uid(), text: t('defaults.badgeValid') },
+        { id: uid(), text: t('defaults.badgePublished') },
+      ]
+    : [],
   bg: '#175243',
 })
 const cols = (ratios: number[], fill: (() => Block)[][]): Block => ({
@@ -34,6 +37,13 @@ const table = (): Block => ({
 })
 const date = (): Block => ({ id: uid(), type: 'date', date: new Date().toISOString().slice(0, 10), align: 'left' })
 const divider = (): Block => ({ id: uid(), type: 'divider' })
+const issueDate = (): Block => ({
+  id: uid(), type: 'date', date: new Date().toISOString().slice(0, 10), issueDate: true, align: 'left',
+})
+const forecast = (dayOffset: number): Block => ({
+  id: uid(), type: 'forecast', period: null, preset: 'bulletin', dayOffset,
+  date: null, src: null, imageId: null, version: null, periodLabel: '', alt: '', caption: '',
+})
 
 /** jetons de l'aperçu miniature dessiné sur la carte */
 export type PreviewToken =
@@ -47,6 +57,9 @@ export type PreviewToken =
 export interface Template {
   key: string
   label: string
+  /** le titre du modèle créé, plutôt que « Modèle {label} » : ses numéros s'appellent
+   *  « {titre} — {date} » */
+  name?: string
   preview: PreviewToken[]
   make: () => Block[]
 }
@@ -103,4 +116,17 @@ export const templates: Template[] = [
       table(),
     ],
   },
+  // la carte du jour et celle du lendemain, autour du commentaire du prévisionniste ;
+  // seulement là où climweb dessine des cartes de prévision
+  ...(hasForecast
+    ? [
+        {
+          key: 'daily',
+          label: t('starters.daily'),
+          name: t('starters.daily'),
+          preview: [{ t: 'band' }, { t: 'img' }, { t: 'text' }, { t: 'img' }],
+          make: () => [header(t('starters.daily'), false), issueDate(), forecast(0), text(), forecast(1)],
+        } satisfies Template,
+      ]
+    : []),
 ]

@@ -25,7 +25,7 @@ async function pick(starter: Template) {
   if (!productId.value || busy.value) return
   busy.value = true
   try {
-    const name = t('chooser.templateName', { label: starter.label.toLowerCase() })
+    const name = starter.name ?? t('chooser.templateName', { label: starter.label.toLowerCase() })
     go(`#/b/${await createBulletin(starter.make(), name, productId.value, true)}`)
   } catch (e) {
     error.value = (e as Error).message

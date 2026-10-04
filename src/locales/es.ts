@@ -190,6 +190,7 @@ const es: Catalog = {
     c3band: '3 columnas · banda',
     c21: '2 : 1',
     decadal: 'Boletín decadal',
+    daily: 'Pronóstico diario',
   },
 }
 

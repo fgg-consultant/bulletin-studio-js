@@ -189,6 +189,7 @@ const fr: Catalog = {
     c3band: '3 colonnes · bandeau',
     c21: '2 : 1',
     decadal: 'Bulletin décadaire',
+    daily: 'Météo journalière',
   },
 }
 

@@ -113,11 +113,12 @@ export async function createBulletin(
   return created.id
 }
 
-/** un nouveau numéro : une copie du document du modèle, sous le même produit.
- *  Le modèle n'est qu'un point de départ — rien ne reste lié ensuite. */
+/** un nouveau numéro, préparé par le serveur — le même chemin que le brouillon
+ *  quotidien : une copie du document du modèle, sous le même produit, datée, ses
+ *  cartes de prévision figées. Le modèle n'est qu'un point de départ : le modifier
+ *  ensuite ne touche à aucun numéro. */
 export async function createFromTemplate(id: number): Promise<number> {
-  const t = await api.read(id)
-  return createBulletin(t.doc?.blocks ?? [], t.title, t.parent, false)
+  return (await api.createIssue(id)).id
 }
 
 export async function deleteBulletin(id: number) {
