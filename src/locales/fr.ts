@@ -62,6 +62,7 @@ const fr: Catalog = {
     untitled: 'Bulletin sans titre',
     dailyDraft: 'Brouillon quotidien à',
     dailyDraftHint: 'Chaque jour à cette heure ({tz}), un brouillon de bulletin est préparé à partir de ce modèle, ses cartes de prévision figées. Vide : pas de brouillon quotidien.',
+    dailyDraftLocal: '{time} chez vous',
   },
   block: { move: 'Déplacer', duplicate: 'Dupliquer', delete: 'Supprimer' },
   canvas: {

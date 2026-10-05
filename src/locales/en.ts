@@ -61,6 +61,7 @@ const en = {
     untitled: 'Untitled bulletin',
     dailyDraft: 'Daily draft at',
     dailyDraftHint: 'Each day at this time ({tz}), a draft bulletin is prepared from this template, its forecast maps frozen. Empty: no daily draft.',
+    dailyDraftLocal: '{time} your time',
   },
   block: {
     move: 'Move',

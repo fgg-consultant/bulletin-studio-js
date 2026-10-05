@@ -63,6 +63,7 @@ const ar: Catalog = {
     untitled: 'نشرة بلا عنوان',
     dailyDraft: 'مسودة يومية في',
     dailyDraftHint: 'كل يوم في هذه الساعة ({tz})، تُعدّ مسودة نشرة من هذا القالب مع تثبيت خرائط التوقعات. اتركه فارغًا لعدم إعداد مسودة يومية.',
+    dailyDraftLocal: '{time} بتوقيتك',
   },
   block: { move: 'نقل', duplicate: 'تكرار', delete: 'حذف' },
   canvas: {

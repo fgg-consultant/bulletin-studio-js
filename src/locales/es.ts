@@ -63,6 +63,7 @@ const es: Catalog = {
     untitled: 'Boletín sin título',
     dailyDraft: 'Borrador diario a las',
     dailyDraftHint: 'Cada día a esta hora ({tz}) se prepara un borrador de boletín a partir de esta plantilla, con sus mapas de pronóstico fijados. Vacío: sin borrador diario.',
+    dailyDraftLocal: '{time} en su hora',
   },
   block: { move: 'Mover', duplicate: 'Duplicar', delete: 'Eliminar' },
   canvas: {

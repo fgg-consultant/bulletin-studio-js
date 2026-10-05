@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import { AlarmClock, Check, Download, ExternalLink, FileText, Monitor, Printer, Smartphone, Upload } from 'lucide-vue-next'
 import { siteTimeZone } from '../api'
 import { t } from '../i18n'
@@ -17,6 +17,34 @@ watch(
   },
   { immediate: true },
 )
+
+/** « 09:00 » à l'heure du site, tel que l'horloge du navigateur l'affiche — '' quand
+ *  les deux s'accordent. Le brouillon part à l'heure du site : un auteur à Paris sur
+ *  un site en UTC doit voir que 09:00 veut dire 11:00 chez lui. */
+function inLocalTime(hhmm: string | null, tz: string): string {
+  if (!hhmm || !tz) return ''
+  const [h, m] = hhmm.split(':').map(Number)
+  const now = new Date()
+  // l'instant où l'horloge de `tz` affiche hh:mm aujourd'hui : d'abord lu comme UTC,
+  // puis corrigé du décalage de `tz` à cet instant
+  const guess = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), h, m)
+  try {
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat('en-US', {
+        timeZone: tz, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric',
+      })
+        .formatToParts(guess)
+        .map((p) => [p.type, Number(p.value)]),
+    )
+    const wall = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute)
+    const local = new Date(guess - (wall - guess))
+    const shown = `${String(local.getHours()).padStart(2, '0')}:${String(local.getMinutes()).padStart(2, '0')}`
+    return shown === hhmm ? '' : shown
+  } catch {
+    return '' // fuseau inconnu du navigateur
+  }
+}
+const draftLocal = computed(() => inLocalTime(doc.dailyDraftAt, siteTimeZone))
 
 const modes = [
   { v: 'desktop', icon: Monitor, title: 'editor.previewDesktop' },
@@ -73,7 +101,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           name="daily-draft"
           class="min-h-0! w-auto! rounded border border-slate-200 px-1.5! py-0.5! text-xs! text-slate-700 focus:outline-1 focus:outline-sky-600"
         />
-        <span class="text-slate-400">{{ siteTimeZone }}</span>
+        <span class="text-slate-400">
+          {{ siteTimeZone }}<template v-if="draftLocal"> · {{ t('editor.dailyDraftLocal', { time: draftLocal }) }}</template>
+        </span>
       </label>
       <span v-else class="text-xs font-medium" :class="doc.live ? 'text-emerald-700' : 'text-slate-400'">
         {{

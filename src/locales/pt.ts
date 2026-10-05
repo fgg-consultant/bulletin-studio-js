@@ -62,6 +62,7 @@ const pt: Catalog = {
     untitled: 'Boletim sem título',
     dailyDraft: 'Rascunho diário às',
     dailyDraftHint: 'Todos os dias a esta hora ({tz}), é preparado um rascunho de boletim a partir deste modelo, com os mapas de previsão fixados. Vazio: sem rascunho diário.',
+    dailyDraftLocal: '{time} na sua hora',
   },
   block: { move: 'Mover', duplicate: 'Duplicar', delete: 'Eliminar' },
   canvas: {
