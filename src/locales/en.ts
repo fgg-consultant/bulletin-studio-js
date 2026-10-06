@@ -19,7 +19,7 @@ const en = {
     viewPublished: 'View the published page',
     modifiedOn: 'modified on {date}',
     blockCount: { one: '{count} block', other: '{count} blocks' },
-    dailyDraft: 'daily draft at {time}',
+    draftAt: 'draft at {time}',
     confirmDeleteTemplate: 'Delete the template “{title}”? This cannot be undone.',
     confirmDeleteBulletin: 'Delete the bulletin “{title}”? This cannot be undone.',
   },
@@ -29,6 +29,11 @@ const en = {
     published: 'Published',
     publishedPending: 'Published · changes pending',
     publishedPendingShort: 'Published · pending',
+  },
+  cadence: {
+    daily: 'Daily',
+    dekadal: 'Dekadal',
+    monthly: 'Monthly',
   },
   chooser: {
     back: 'My bulletins',
@@ -59,9 +64,16 @@ const en = {
     publishHint: 'Publish to ClimWeb’s Products section',
     fileName: 'bulletin',
     untitled: 'Untitled bulletin',
-    dailyDraft: 'Daily draft at',
-    dailyDraftHint: 'Each day at this time ({tz}), a draft bulletin is prepared from this template, its forecast maps frozen. Empty: no daily draft.',
-    dailyDraftLocal: '{time} your time',
+    cadence: 'Period of each bulletin',
+    cadenceHint:
+      'Each bulletin covers a day, a dekad (1–10, 11–20, 21 to month end) or a month, starting on the day it is prepared: its dates, its title and the dates inserted in the banner follow it.',
+    draft: 'Draft at',
+    draftHint: {
+      daily: 'Each day at this time ({tz}), a draft bulletin is prepared from this template, its forecast maps frozen. Empty: no automatic draft.',
+      dekadal: 'On the 1st, 11th and 21st of each month at this time ({tz}), a draft bulletin is prepared from this template, its forecast maps frozen. Empty: no automatic draft.',
+      monthly: 'On the 1st of each month at this time ({tz}), a draft bulletin is prepared from this template, its forecast maps frozen. Empty: no automatic draft.',
+    },
+    draftLocal: '{time} your time',
   },
   block: {
     move: 'Move',
@@ -84,6 +96,7 @@ const en = {
     image: 'Image',
     map: 'Map',
     forecast: 'Forecast',
+    cities: 'Cities',
     button: 'Button',
     table: 'Table',
     date: 'Date',
@@ -103,6 +116,8 @@ const en = {
     badge: 'Badge',
     background: 'Background',
     customColor: 'Custom background colour',
+    insertDate: 'Insert a date',
+    fieldsHint: 'Place the cursor in a text of the banner, then pick a date',
   },
   image: {
     choose: 'Choose an image',
@@ -137,6 +152,12 @@ const en = {
     issueDate: 'Bulletin date',
     issueDateHint: 'Shows the date of each bulletin rather than a fixed date',
   },
+  fields: {
+    start: 'Period start',
+    end: 'Period end',
+    period: 'Period',
+    published: 'Publication date',
+  },
   text: {
     heading: 'Section heading',
     body: 'Type your text…',
@@ -167,6 +188,26 @@ const en = {
     dayN: 'Bulletin day + {n}',
     alt: 'Weather forecast map, {period}, {date}',
   },
+  cities: {
+    loading: 'Loading the city forecasts…',
+    missing: 'No forecast published for {date} yet.',
+    noneChosen: 'None of the chosen cities has a forecast for {date}.',
+    preview: 'Preview: forecast of {date}',
+    templateHint: 'Each bulletin will freeze the forecast of its own date.',
+    frozen: 'Forecast of {date} · {period}',
+    newer: 'The published forecast has changed since it was added.',
+    columns: 'Columns',
+    allCities: 'All cities',
+    chosen: { one: '{count} city of {total}', other: '{count} cities of {total}' },
+    choose: 'Cities shown, in this order',
+    reset: 'All, by name',
+    noData: 'no forecast',
+    missingCities: 'No forecast for: {names}',
+    forecastFor: 'Forecast for {date} · {period}',
+    max: 'max',
+    min: 'min',
+    compass: { n: 'N', ne: 'NE', e: 'E', se: 'SE', s: 'S', sw: 'SW', w: 'W', nw: 'NW' },
+  },
   toolbar: {
     paragraph: 'Paragraph',
     h1: 'Heading 1',
@@ -192,8 +233,8 @@ const en = {
   /** contenu inséré dans le document — suit la langue de l'auteur au moment de la création */
   defaults: {
     eyebrow: 'Bulletin',
-    badgeValid: 'Valid from … to …',
-    badgePublished: 'Published on …',
+    badgeValid: 'Valid from {start} to {end}',
+    badgePublished: 'Published on {published}',
     button: 'Learn more',
     column: 'Column {n}',
   },
@@ -207,7 +248,9 @@ const en = {
     c3band: '3 columns · banner',
     c21: '2 : 1',
     decadal: 'Decadal bulletin',
+    monthly: 'Monthly bulletin',
     daily: 'Daily weather',
+    cities: 'Weather by city',
   },
 } as const
 

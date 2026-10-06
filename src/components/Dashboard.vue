@@ -81,7 +81,7 @@ async function remove(b: api.BulletinMeta) {
                 <div class="truncate font-semibold text-slate-800">{{ tpl.title }}</div>
                 <div class="mt-0.5 text-xs text-slate-500">
                   {{ tpl.parentTitle }} · {{ t('dashboard.blockCount', { count: tpl.blockCount }) }}
-                  <template v-if="tpl.dailyDraftAt">· {{ t('dashboard.dailyDraft', { time: tpl.dailyDraftAt }) }}</template>
+                  · {{ t(`cadence.${tpl.cadence}`) }}<template v-if="tpl.draftAt">, {{ t('dashboard.draftAt', { time: tpl.draftAt }) }}</template>
                 </div>
               </div>
             </a>

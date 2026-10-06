@@ -46,16 +46,39 @@ export function t(key: string, params: Record<string, string | number> = {}): st
 }
 
 const dateOnly = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' })
+const monthYear = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' })
 const dateTime = new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short' })
 
 export const formatDate = (d: Date) => dateOnly.format(d)
 /** une date ISO `YYYY-MM-DD`, lue à minuit local (`new Date(iso)` la lirait en UTC et
- *  afficherait la veille à l'ouest de Greenwich) ; '' si elle est vide ou invalide */
-export function formatDay(iso: string | null | undefined): string {
+ *  afficherait la veille à l'ouest de Greenwich) ; null si elle est vide ou invalide */
+function day(iso: string | null | undefined): Date | null {
   const d = new Date(`${iso}T00:00:00`)
-  return iso && !isNaN(d.getTime()) ? formatDate(d) : ''
+  return iso && !isNaN(d.getTime()) ? d : null
+}
+/** « 5 octobre 2026 » ; '' si la date est vide ou invalide */
+export function formatDay(iso: string | null | undefined): string {
+  const d = day(iso)
+  return d ? formatDate(d) : ''
+}
+/** « octobre 2026 » */
+export function formatMonth(iso: string | null | undefined): string {
+  const d = day(iso)
+  return d ? monthYear.format(d) : ''
+}
+/** « 11–20 octobre 2026 » : la plage dans la tournure de la langue, qu'Intl connaît */
+export function formatDayRange(from: string | null | undefined, to: string | null | undefined): string {
+  const a = day(from)
+  const b = day(to)
+  return a && b ? dateOnly.formatRange(a, b) : formatDay(from)
 }
 export const formatDateTime = (d: Date | number) => dateTime.format(d)
+/** `n` jours après une date ISO, en ISO */
+export function addDays(iso: string, n: number): string {
+  const d = new Date(`${iso}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().slice(0, 10)
+}
 
 // le libellé de dépôt d'une colonne vide vit dans un ::after : il passe par une
 // custom property, seul moyen de traduire un `content` CSS

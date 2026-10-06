@@ -1,8 +1,9 @@
-import { nextTick, reactive, watch } from 'vue'
+import { computed, nextTick, reactive, watch } from 'vue'
 import * as api from './api'
+import { siteToday, type IssueDates } from './fields'
 import { t } from './i18n'
 import { renderHtml } from './render'
-import type { Block } from './types'
+import type { Block, Cadence } from './types'
 
 export const uid = () => crypto.randomUUID()
 
@@ -13,10 +14,15 @@ export interface BulletinDoc {
   blocks: Block[]
   /** un modèle est un simple point de départ : jamais publié, jamais public */
   isTemplate: boolean
-  /** la date du numéro : les cartes de prévision et la « date du numéro » la suivent */
+  /** le premier jour de la période du numéro : les cartes de prévision, la « date du
+   *  numéro » et les dates insérées la suivent */
   date: string | null
-  /** un modèle seulement : l'heure du brouillon quotidien, ou null */
-  dailyDraftAt: string | null
+  /** son dernier jour, null pour un numéro d'un jour */
+  validUntil: string | null
+  /** d'un modèle : la période de ses numéros */
+  cadence: Cadence
+  /** un modèle seulement : l'heure de ses brouillons, ou null */
+  draftAt: string | null
   /** la ProductPage hôte — les parutions d'un modèle la partagent */
   parent: number | null
   live: boolean
@@ -25,9 +31,16 @@ export interface BulletinDoc {
 }
 
 export const doc = reactive<BulletinDoc>({
-  id: null, title: '', blocks: [], isTemplate: false, date: null, dailyDraftAt: null,
-  parent: null, live: false, hasUnpublishedChanges: false, url: null,
+  id: null, title: '', blocks: [], isTemplate: false, date: null, validUntil: null,
+  cadence: 'daily', draftAt: null, parent: null, live: false, hasUnpublishedChanges: false, url: null,
 })
+
+/** ce que remplissent les dates insérées ; null pour un modèle, qui n'a pas de période */
+export const issueDates = computed<IssueDates | null>(() =>
+  doc.isTemplate || !doc.date
+    ? null
+    : { start: doc.date, end: doc.validUntil ?? doc.date, cadence: doc.cadence, published: siteToday() },
+)
 
 export const ui = reactive({
   selectedId: null as string | null,
@@ -42,9 +55,11 @@ function payload(): api.BulletinPayload {
   return {
     title: doc.title,
     doc: { blocks: doc.blocks },
-    html: renderHtml(doc.blocks, { issueDate: doc.isTemplate ? null : doc.date }),
+    // rendu à chaque enregistrement, donc juste avant de publier : {published} est
+    // le jour de la publication
+    html: renderHtml(doc.blocks, { dates: issueDates.value }),
     isTemplate: doc.isTemplate,
-    ...(doc.isTemplate ? { dailyDraftAt: doc.dailyDraftAt } : {}),
+    ...(doc.isTemplate ? { cadence: doc.cadence, draftAt: doc.draftAt } : {}),
   }
 }
 
@@ -59,7 +74,9 @@ function apply(b: api.BulletinFull | api.BulletinMeta, blocks?: Block[]) {
   if (blocks) doc.blocks = blocks
   doc.isTemplate = b.isTemplate
   doc.date = b.date
-  doc.dailyDraftAt = b.dailyDraftAt
+  doc.validUntil = b.validUntil
+  doc.cadence = b.cadence
+  doc.draftAt = b.draftAt
   doc.parent = b.parent
   doc.live = b.live
   doc.hasUnpublishedChanges = b.hasUnpublishedChanges
@@ -109,17 +126,17 @@ export async function openBulletin(id: number): Promise<boolean> {
 }
 
 export async function createBulletin(
-  blocks: Block[], title: string, parent: number, isTemplate = false,
+  blocks: Block[], title: string, parent: number, isTemplate = false, cadence?: Cadence,
 ): Promise<number> {
   const created = await api.create({
-    title, doc: { blocks }, html: renderHtml(blocks), isTemplate, parent,
+    title, doc: { blocks }, html: renderHtml(blocks), isTemplate, parent, ...(cadence ? { cadence } : {}),
   })
   return created.id
 }
 
-/** un nouveau numéro, préparé par le serveur — le même chemin que le brouillon
- *  quotidien : une copie du document du modèle, sous le même produit, datée, ses
- *  cartes de prévision figées. Le modèle n'est qu'un point de départ : le modifier
+/** un nouveau numéro, préparé par le serveur — le même chemin que les brouillons
+ *  automatiques : une copie du document du modèle, sous le même produit, datée de la
+ *  période qui commence, ses cartes de prévision figées. Le modèle n'est qu'un point de départ : le modifier
  *  ensuite ne touche à aucun numéro. */
 export async function createFromTemplate(id: number): Promise<number> {
   return (await api.createIssue(id)).id

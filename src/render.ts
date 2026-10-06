@@ -6,6 +6,8 @@
  * l'éditeur charge, donc ce que l'auteur compose est ce que le site affiche. */
 import { $generateHtmlFromNodes } from '@lexical/html'
 import { $getRoot, createEditor } from 'lexical'
+import { citiesHtml } from './cities'
+import { fillFields, type IssueDates } from './fields'
 import { formatDay, t } from './i18n'
 import { esc } from './esc'
 import { nodes, theme } from './lexical'
@@ -14,9 +16,12 @@ import type { Block, ForecastBlock } from './types'
 
 /** Ce que le html doit au numéro et pas au document : un modèle n'en a pas. */
 export interface RenderContext {
-  /** la date du numéro, ISO YYYY-MM-DD */
-  issueDate?: string | null
+  /** la période du numéro : la « date du bulletin » et les dates insérées */
+  dates?: IssueDates | null
 }
+
+/** un texte de l'en-tête, ses dates insérées remplies */
+const fill = (text: string, ctx: RenderContext) => (ctx.dates ? fillFields(text, ctx.dates) : text)
 
 /** le texte alternatif d'une carte de prévision quand l'auteur n'en a pas écrit */
 export const forecastAlt = (b: ForecastBlock) =>
@@ -53,13 +58,13 @@ function block(b: Block, ctx: RenderContext): string {
     case 'header': {
       const badges = b.badges
         .filter((x) => x.text.trim())
-        .map((x) => `<span class="bs-badge">${esc(x.text)}</span>`)
+        .map((x) => `<span class="bs-badge">${esc(fill(x.text, ctx))}</span>`)
         .join('')
       return [
         `<div class="bs-header ${isDark(b.bg) ? 'bs-header-dark' : 'bs-header-light'}" style="background-color:${esc(b.bg)}">`,
-        b.eyebrow.trim() ? `<span class="bs-eyebrow">${esc(b.eyebrow)}</span>` : '',
-        b.title.trim() ? `<h1 class="bs-header-title">${esc(b.title)}</h1>` : '',
-        b.subtitle.trim() ? `<p class="bs-header-sub">${esc(b.subtitle)}</p>` : '',
+        b.eyebrow.trim() ? `<span class="bs-eyebrow">${esc(fill(b.eyebrow, ctx))}</span>` : '',
+        b.title.trim() ? `<h1 class="bs-header-title">${esc(fill(b.title, ctx))}</h1>` : '',
+        b.subtitle.trim() ? `<p class="bs-header-sub">${esc(fill(b.subtitle, ctx))}</p>` : '',
         badges ? `<div class="bs-badges">${badges}</div>` : '',
         `</div>`,
       ].join('')
@@ -92,7 +97,7 @@ function block(b: Block, ctx: RenderContext): string {
       return `<table class="bs-table"><tbody>${rows}</tbody></table>`
     }
     case 'date': {
-      const day = formatDay(b.issueDate && ctx.issueDate ? ctx.issueDate : b.date)
+      const day = formatDay(b.issueDate && ctx.dates ? ctx.dates.start : b.date)
       if (!day) return ''
       return `<div class="bs-date" style="text-align:${esc(b.align)}">${esc(day)}</div>`
     }
@@ -102,6 +107,9 @@ function block(b: Block, ctx: RenderContext): string {
       const caption = b.caption?.trim() ? `<figcaption class="bs-caption">${esc(b.caption)}</figcaption>` : ''
       return `<figure class="bs-figure bs-forecast"><img src="${esc(b.src)}" alt="${esc(forecastAlt(b))}">${caption}</figure>`
     }
+    case 'cities':
+      // un numéro sans prévision encore publiée : rien, comme une carte manquante
+      return b.rows ? citiesHtml(b) : ''
     case 'map': {
       if (!b.tiles) return ''
       // un marqueur déclaratif, jamais de script : le bundle d'hydratation lit ces

@@ -1,9 +1,14 @@
 import type { Legend } from './map'
 
+/** la période que couvre chaque numéro d'un modèle : un jour, une décade (1–10,
+ *  11–20, 21–fin du mois) ou un mois — celle qui commence le jour où il est préparé */
+export type Cadence = 'daily' | 'dekadal' | 'monthly'
+
 export type BlockType =
   | 'header'
   | 'map'
   | 'forecast'
+  | 'cities'
   | 'text'
   | 'image'
   | 'button'
@@ -132,6 +137,46 @@ export interface ForecastBlock {
   caption: string
 }
 
+/** Une ville de la grille, ses valeurs telles que forecastmanager les garde : null
+ *  pour ce que l'office ne publie pas. */
+export interface CityForecastRow {
+  slug: string
+  name: string
+  /** l'icône de la condition, svg de forecastmanager (chemin du site) */
+  icon: string | null
+  /** le libellé de la condition : texte alternatif de l'icône */
+  condition: string
+  tmax: number | null
+  tmin: number | null
+  /** la seule température d'un office qui ne publie ni min ni max */
+  temp: number | null
+  wind: number | null
+  /** d'où vient le vent, en degrés */
+  windDir: number | null
+}
+
+/** Les prévisions par ville, en grille : le pendant HTML de la carte de prévision.
+ *  Même recette (créneau, J+n) ; un numéro y fige les lignes de toutes les villes,
+ *  le choix des villes s'applique au rendu. */
+export interface CitiesBlock {
+  id: string
+  type: 'cities'
+  /** recette : le créneau (HH:MM) parmi ceux que l'office a réglés, null = le premier */
+  period: string | null
+  dayOffset: number
+  /** les villes montrées, par slug et dans l'ordre ; null = toutes, par nom */
+  cities: string[] | null
+  /** colonnes de villes, remplies l'une après l'autre */
+  columns: number
+  /** figé dans un numéro ; `rows` null = pas encore de prévision */
+  date: string | null
+  periodLabel: string
+  units: { temperature: string | null; wind: string | null } | null
+  rows: CityForecastRow[] | null
+  /** empreinte des valeurs figées : une autre côté serveur propose « Actualiser » */
+  version: string | null
+}
+
 export type Block =
   | HeaderBlock
   | TextBlock
@@ -144,3 +189,4 @@ export type Block =
   | ColumnsBlock
   | MapBlock
   | ForecastBlock
+  | CitiesBlock

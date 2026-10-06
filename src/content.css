@@ -289,3 +289,127 @@
   text-align: center;
   font-size: 0.7rem;
 }
+
+/* ---- prévisions par ville ----
+   Non scopées, comme les cartes : l'aperçu de l'éditeur affiche le même HTML
+   (cities.ts). Une table par colonne de villes ; elles se replient l'une sous
+   l'autre quand la place manque. */
+.bs-cities {
+  /* bandes et flèches sont des fonds : imprimés quand même */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.bs-doc .bs-cities {
+  margin: 1rem 0;
+}
+.bs-cities-grid {
+  display: flex;
+  flex-wrap: wrap;
+  /* une colonne plus courte garde la hauteur de ses lignes, au lieu d'être étirée */
+  align-items: flex-start;
+  gap: 0 1rem;
+}
+.bs-cities-table {
+  flex: 1 1 15rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  color: #0f172a;
+}
+.bs-cities-table td {
+  height: 3rem;
+  padding: 0.125rem 0.375rem;
+  vertical-align: middle;
+  border: 0;
+}
+.bs-cities-table tr:nth-child(odd) td {
+  background: #e7f0fa;
+}
+/* sur une ligne : un nom replié décalerait les bandes d'une colonne à l'autre ;
+   faute de place, les colonnes passent plutôt l'une sous l'autre */
+.bs-cities-table .bs-city-name {
+  width: 100%;
+  padding-inline-start: 0.625rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.bs-cities-table .bs-city-icon img {
+  display: block;
+  width: 2.5rem;
+  height: 2.5rem;
+  max-width: none;
+}
+.bs-cities-table .bs-city-temp {
+  white-space: nowrap;
+}
+.bs-temps {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: middle;
+  text-align: end;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.bs-tmax {
+  color: #dc2626;
+}
+.bs-tmin {
+  color: #1d4ed8;
+}
+/* « °C », « 2 m/s » : gardés dans cet ordre au milieu d'un texte arabe */
+.bs-unit,
+.bs-speed {
+  unicode-bidi: isolate;
+  direction: ltr;
+}
+.bs-unit {
+  margin-inline-start: 0.125rem;
+  vertical-align: middle;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+.bs-wind {
+  position: relative;
+  display: block;
+  width: 2rem;
+  height: 2rem;
+  border: 1.5px solid #1e293b;
+  border-radius: 50%;
+  background: #fff;
+}
+/* la flèche pointe vers le haut ; le style inline la tourne vers où va le vent */
+.bs-wind-arrow {
+  position: absolute;
+  inset: 0;
+}
+.bs-wind-arrow::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.8rem;
+  height: 1.15rem;
+  transform: translate(-50%, -55%);
+  background: #1e293b;
+  clip-path: polygon(50% 0, 100% 100%, 50% 72%, 0 100%);
+}
+.bs-cities-table .bs-city-wind {
+  padding-inline-end: 0.625rem;
+  text-align: center;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  color: #334155;
+}
+.bs-city-wind span {
+  display: block;
+}
+.bs-cities-meta {
+  margin: 0.375rem 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+.bs-cities-meta .bs-tmax,
+.bs-cities-meta .bs-tmin {
+  font-weight: 600;
+}

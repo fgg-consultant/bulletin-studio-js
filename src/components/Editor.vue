@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
-import { AlarmClock, Check, Download, ExternalLink, FileText, Monitor, Printer, Smartphone, Upload } from 'lucide-vue-next'
+import { AlarmClock, CalendarRange, Check, Download, ExternalLink, FileText, Monitor, Printer, Smartphone, Upload } from 'lucide-vue-next'
 import { siteTimeZone } from '../api'
 import { t } from '../i18n'
 import { go } from '../router'
 import { doc, exportJson, exportPdf, openBulletin, publishCurrent, ui } from '../store'
+import type { Cadence } from '../types'
 import Canvas from './Canvas.vue'
 import Sidebar from './Sidebar.vue'
 
@@ -44,7 +45,9 @@ function inLocalTime(hhmm: string | null, tz: string): string {
     return '' // fuseau inconnu du navigateur
   }
 }
-const draftLocal = computed(() => inLocalTime(doc.dailyDraftAt, siteTimeZone))
+const draftLocal = computed(() => inLocalTime(doc.draftAt, siteTimeZone))
+
+const cadences: Cadence[] = ['daily', 'dekadal', 'monthly']
 
 const modes = [
   { v: 'desktop', icon: Monitor, title: 'editor.previewDesktop' },
@@ -85,24 +88,41 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       >
         {{ t('status.template') }}
       </span>
+      <!-- les réglages du modèle : la période de ses numéros, l'heure de leurs brouillons.
+           Les ! : wagtail dessine la flèche d'un select pour 42 px de haut, et son
+           input[type=time] est plus spécifique qu'une classe -->
       <label
         v-if="doc.isTemplate"
         class="flex items-center gap-1.5 text-xs whitespace-nowrap text-slate-500"
-        :title="t('editor.dailyDraftHint', { tz: siteTimeZone })"
+        :title="t('editor.cadenceHint')"
+      >
+        <CalendarRange :size="14" class="text-slate-400" />
+        <select
+          v-model="doc.cadence"
+          name="cadence"
+          :aria-label="t('editor.cadence')"
+          class="min-h-0! appearance-auto! rounded border border-slate-200 bg-none! py-0.5! ps-1! pe-0.5! text-xs! text-slate-700 focus:outline-1 focus:outline-sky-600"
+        >
+          <option v-for="c in cadences" :key="c" :value="c">{{ t(`cadence.${c}`) }}</option>
+        </select>
+      </label>
+      <label
+        v-if="doc.isTemplate"
+        class="flex items-center gap-1.5 text-xs whitespace-nowrap text-slate-500"
+        :title="t(`editor.draftHint.${doc.cadence}`, { tz: siteTimeZone })"
       >
         <AlarmClock :size="14" class="text-slate-400" />
-        {{ t('editor.dailyDraft') }}
-        <!-- par quart d'heure : le serveur prépare les brouillons à :00, :15, :30, :45.
-             Les ! : input[type=time] de wagtail est plus spécifique qu'une classe -->
+        {{ t('editor.draft') }}
+        <!-- par quart d'heure : le serveur prépare les brouillons à :00, :15, :30, :45 -->
         <input
-          v-model="doc.dailyDraftAt"
+          v-model="doc.draftAt"
           type="time"
           step="900"
-          name="daily-draft"
+          name="draft-at"
           class="min-h-0! w-auto! rounded border border-slate-200 px-1.5! py-0.5! text-xs! text-slate-700 focus:outline-1 focus:outline-sky-600"
         />
         <span class="text-slate-400">
-          {{ siteTimeZone }}<template v-if="draftLocal"> · {{ t('editor.dailyDraftLocal', { time: draftLocal }) }}</template>
+          {{ siteTimeZone }}<template v-if="draftLocal"> · {{ t('editor.draftLocal', { time: draftLocal }) }}</template>
         </span>
       </label>
       <span v-else class="text-xs font-medium" :class="doc.live ? 'text-emerald-700' : 'text-slate-400'">

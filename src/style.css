@@ -27,6 +27,16 @@ body,
   opacity: 0.45;
 }
 
+/* une date insérée, dans un modèle : une étiquette, que chaque numéro remplace par sa
+   date (fields.ts) */
+.bs-field {
+  border: 1px dashed currentColor;
+  border-radius: 0.25rem;
+  padding: 0 0.3em;
+  font-style: italic;
+  opacity: 0.8;
+}
+
 /* ---- table à dessin ---- */
 .bs-dots {
   background-color: #f1f5f9;

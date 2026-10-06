@@ -2,6 +2,7 @@
 import { nextTick } from 'vue'
 import draggable from 'vuedraggable'
 import {
+  Building2,
   Calendar,
   CloudSun,
   Heading1,
@@ -15,6 +16,7 @@ import {
   Type,
 } from 'lucide-vue-next'
 import { hasForecast } from '../api'
+import { defaultBadges } from '../fields'
 import { t } from '../i18n'
 import { doc, ui, uid } from '../store'
 import type { Block, BlockType } from '../types'
@@ -40,10 +42,7 @@ const content: PaletteItem[] = [
       eyebrow: t('defaults.eyebrow'),
       title: '',
       subtitle: '',
-      badges: [
-        { id: uid(), text: t('defaults.badgeValid') },
-        { id: uid(), text: t('defaults.badgePublished') },
-      ],
+      badges: defaultBadges(uid),
       bg: '#175243',
     }),
   },
@@ -59,18 +58,31 @@ const content: PaletteItem[] = [
       time: null, legend: null, bounds: null, height: 'md',
     }),
   },
-  // la carte de prévision de climweb : seulement là où forecastmanager tourne
+  // la carte de prévision de climweb et la grille des villes : seulement là où
+  // forecastmanager tourne
   ...(hasForecast
-    ? [{
-        key: 'forecast',
-        label: t('sidebar.forecast'),
-        type: 'forecast',
-        icon: CloudSun,
-        create: (): Block => ({
-          id: uid(), type: 'forecast', period: null, preset: 'bulletin', dayOffset: 0,
-          date: null, src: null, imageId: null, version: null, periodLabel: '', alt: '', caption: '',
-        }),
-      } satisfies PaletteItem]
+    ? [
+        {
+          key: 'forecast',
+          label: t('sidebar.forecast'),
+          type: 'forecast',
+          icon: CloudSun,
+          create: (): Block => ({
+            id: uid(), type: 'forecast', period: null, preset: 'bulletin', dayOffset: 0,
+            date: null, src: null, imageId: null, version: null, periodLabel: '', alt: '', caption: '',
+          }),
+        } satisfies PaletteItem,
+        {
+          key: 'cities',
+          label: t('sidebar.cities'),
+          type: 'cities',
+          icon: Building2,
+          create: (): Block => ({
+            id: uid(), type: 'cities', period: null, dayOffset: 0, cities: null, columns: 2,
+            date: null, periodLabel: '', units: null, rows: null, version: null,
+          }),
+        } satisfies PaletteItem,
+      ]
     : []),
   { key: 'image', label: t('sidebar.image'), type: 'image', icon: ImageIcon, create: () => ({ id: uid(), type: 'image', src: null, alt: '', caption: '' }) },
   { key: 'button', label: t('sidebar.button'), type: 'button', icon: MousePointerClick, create: () => ({ id: uid(), type: 'button', label: t('defaults.button'), href: '', align: 'center' }) },

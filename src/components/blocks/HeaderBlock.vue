@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Plus, X } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { CalendarPlus, Plus, X } from 'lucide-vue-next'
+import { FIELDS, fieldLabel, type Field } from '../../fields'
 import { t } from '../../i18n'
-import { pastePlain, uid } from '../../store'
+import { uid } from '../../store'
 import type { HeaderBlock } from '../../types'
+import FieldText from '../FieldText.vue'
 
 const props = defineProps<{ block: HeaderBlock; selected: boolean }>()
-
-// initialise le texte des contenteditable sans le lier (le caret sauterait à chaque frappe)
-const vInitText = {
-  mounted: (el: HTMLElement, { value }: { value: string }) => {
-    el.textContent = value
-  },
-}
 
 const swatches = ['#175243', '#0c4a6e', '#1e293b', '#7f1d1d', '#b45309', '#f1f5f9']
 
@@ -21,8 +16,14 @@ const dark = computed(() => {
   return r * 0.299 + g * 0.587 + b * 0.114 < 140
 })
 
-function edit(e: Event, key: 'eyebrow' | 'title' | 'subtitle') {
-  props.block[key] = (e.target as HTMLElement).textContent ?? ''
+// une date s'insère là où est le curseur, dans l'un des textes de l'en-tête : les
+// boutons ne prennent pas le focus (mousedown.prevent), le texte le garde
+const inField = ref(false)
+const track = (e: FocusEvent) => {
+  inField.value = e.type === 'focusin' && (e.target as HTMLElement).matches('[data-fields]')
+}
+function insert(field: Field) {
+  if (inField.value) document.execCommand('insertText', false, `{${field}}`)
 }
 </script>
 
@@ -31,44 +32,33 @@ function edit(e: Event, key: 'eyebrow' | 'title' | 'subtitle') {
     class="bs-header rounded-lg px-8 py-9 transition-colors"
     :class="dark ? 'text-white' : 'text-slate-900'"
     :style="{ backgroundColor: block.bg }"
+    @focusin="track"
+    @focusout="track"
   >
     <div class="flex items-center gap-3">
       <span class="h-px w-8 shrink-0" :class="dark ? 'bg-white/60' : 'bg-slate-500'" />
-      <span
-        v-init-text="block.eyebrow"
-        contenteditable="true"
-        spellcheck="false"
-        :data-placeholder="t('header.eyebrow')"
+      <FieldText
+        v-model="block.eyebrow"
+        :placeholder="t('header.eyebrow')"
         class="text-xs font-semibold tracking-[0.15em] uppercase outline-none"
         :class="dark ? 'text-white/75' : 'text-slate-600'"
-        @input="edit($event, 'eyebrow')"
-        @paste="pastePlain"
-        @keydown.enter.prevent
-      ></span>
+      />
     </div>
 
-    <h1
-      v-init-text="block.title"
-      contenteditable="true"
-      spellcheck="false"
-      :data-placeholder="t('header.title')"
+    <FieldText
+      v-model="block.title"
+      tag="h1"
+      :placeholder="t('header.title')"
       class="mt-4 text-4xl leading-tight font-extrabold tracking-tight text-inherit outline-none"
-      @input="edit($event, 'title')"
-      @paste="pastePlain"
-      @keydown.enter.prevent
-    ></h1>
+    />
 
-    <p
-      v-init-text="block.subtitle"
-      contenteditable="true"
-      spellcheck="false"
-      :data-placeholder="t('header.subtitle')"
+    <FieldText
+      v-model="block.subtitle"
+      tag="p"
+      :placeholder="t('header.subtitle')"
       class="mt-4 max-w-2xl text-base leading-relaxed outline-none"
       :class="dark ? 'text-white/85' : 'text-slate-700'"
-      @input="edit($event, 'subtitle')"
-      @paste="pastePlain"
-      @keydown.enter.prevent
-    ></p>
+    />
 
     <div class="mt-6 flex flex-wrap items-center gap-2">
       <span
@@ -77,15 +67,7 @@ function edit(e: Event, key: 'eyebrow' | 'title' | 'subtitle') {
         class="flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium"
         :class="dark ? 'border-white/25 bg-white/10' : 'border-slate-300 bg-white/60'"
       >
-        <span
-          v-init-text="badge.text"
-          contenteditable="true"
-          spellcheck="false"
-          class="outline-none"
-          @input="badge.text = ($event.target as HTMLElement).textContent ?? ''"
-          @paste="pastePlain"
-          @keydown.enter.prevent
-        ></span>
+        <FieldText v-model="badge.text" class="outline-none" />
         <button
           v-if="selected"
           class="-mr-1 rounded-full p-0.5 opacity-60 hover:opacity-100"
@@ -105,7 +87,28 @@ function edit(e: Event, key: 'eyebrow' | 'title' | 'subtitle') {
       </button>
     </div>
 
-    <div v-if="selected" class="mt-6 flex w-fit items-center gap-2 rounded-lg bg-white/95 p-2 shadow" @click.stop>
+    <div
+      v-if="selected"
+      class="mt-6 flex w-fit flex-wrap items-center gap-1.5 rounded-lg bg-white/95 p-2 shadow"
+      :title="inField ? '' : t('header.fieldsHint')"
+      @click.stop
+    >
+      <span class="flex items-center gap-1 px-1 text-xs font-medium text-slate-600">
+        <CalendarPlus :size="13" /> {{ t('header.insertDate') }}
+      </span>
+      <button
+        v-for="f in FIELDS"
+        :key="f"
+        class="rounded border border-slate-200 px-2 py-0.5 text-xs text-slate-700 enabled:hover:border-sky-600 enabled:hover:text-sky-700 disabled:opacity-40"
+        :disabled="!inField"
+        @mousedown.prevent
+        @click="insert(f)"
+      >
+        {{ fieldLabel(f) }}
+      </button>
+    </div>
+
+    <div v-if="selected" class="mt-2 flex w-fit items-center gap-2 rounded-lg bg-white/95 p-2 shadow" @click.stop>
       <span class="px-1 text-xs font-medium text-slate-600">{{ t('header.background') }}</span>
       <button
         v-for="c in swatches"

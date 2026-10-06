@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import { CloudSun, RefreshCw } from 'lucide-vue-next'
 import * as api from '../../api'
-import { formatDateTime, formatDay, t } from '../../i18n'
+import { addDays, formatDateTime, formatDay, t } from '../../i18n'
 import { forecastAlt } from '../../render'
 import { doc, pastePlain } from '../../store'
 import type { ForecastBlock } from '../../types'
@@ -18,12 +18,6 @@ const vInitText = {
   mounted: (el: HTMLElement, { value }: { value: string }) => {
     el.textContent = value
   },
-}
-
-function addDays(iso: string, n: number): string {
-  const d = new Date(`${iso}T00:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + n)
-  return d.toISOString().slice(0, 10)
 }
 
 /** Un modèle n'a pas de date : il montre en aperçu la carte d'aujourd'hui. Un numéro

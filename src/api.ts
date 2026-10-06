@@ -1,6 +1,6 @@
 /** Client du store climweb. La page django hôte fournit les urls et le jeton CSRF
  *  par attributs data sur le point de montage. */
-import type { Block } from './types'
+import type { Block, Cadence, CitiesBlock, CityForecastRow } from './types'
 
 const mount = document.getElementById('bulletin-studio-app')
 
@@ -10,6 +10,7 @@ const IMAGES = mount?.dataset.imagesUrl ?? ''
 const MAP_CONFIG = mount?.dataset.mapConfigUrl ?? ''
 // seulement sur un climweb météorologique (forecastmanager installé)
 const FORECAST = mount?.dataset.forecastUrl ?? ''
+const FORECAST_CITIES = mount?.dataset.forecastCitiesUrl ?? ''
 
 /** le fuseau du site : celui du brouillon quotidien, pas forcément celui du navigateur */
 export const siteTimeZone = mount?.dataset.timeZone ?? ''
@@ -19,11 +20,15 @@ export interface BulletinMeta {
   id: number
   title: string
   isTemplate: boolean
-  /** la date du numéro (« Effective from » de climweb), ISO YYYY-MM-DD */
+  /** le premier jour de la période du numéro (« Effective from » de climweb), ISO */
   date: string | null
-  /** un modèle seulement : chaque jour à cette heure (HH:MM, heure du site), un
-   *  brouillon de numéro est préparé */
-  dailyDraftAt: string | null
+  /** son dernier jour (« Effective until ») ; null pour un numéro d'un jour */
+  validUntil: string | null
+  /** d'un modèle : la période de ses numéros ; d'un numéro : celle de son modèle */
+  cadence: Cadence
+  /** un modèle seulement : le premier jour de chaque période à cette heure (HH:MM,
+   *  heure du site), un brouillon de numéro est préparé ; null : jamais */
+  draftAt: string | null
   /** pk de la ProductPage hôte : les parutions d'un modèle la partagent */
   parent: number
   parentTitle: string
@@ -63,8 +68,9 @@ export interface BulletinPayload {
   doc: { blocks: Block[] }
   html: string
   isTemplate: boolean
-  /** un modèle seulement ; absent, le serveur n'y touche pas */
-  dailyDraftAt?: string | null
+  /** un modèle seulement ; absents, le serveur n'y touche pas */
+  cadence?: Cadence
+  draftAt?: string | null
   /** requis à la création uniquement */
   parent?: number
 }
@@ -81,8 +87,9 @@ export const create = (payload: BulletinPayload) =>
 export const update = (id: number, payload: BulletinPayload) =>
   call<BulletinFull>(`${API}${id}/`, { method: 'PUT', body: JSON.stringify(payload) })
 
-/** un nouveau numéro du modèle, préparé par le serveur : cartes de prévision figées
- *  pour sa date (aujourd'hui pour le site, par défaut) */
+/** un nouveau numéro du modèle, préparé par le serveur : celui de la période qui
+ *  contient `date` (aujourd'hui pour le site, par défaut), ses cartes de prévision
+ *  figées */
 export const createIssue = (templateId: number, date?: string) =>
   call<BulletinFull>(`${API}${templateId}/issues/`, {
     method: 'POST',
@@ -161,7 +168,7 @@ export interface TileJson {
 
 export const tileJson = (url: string) => call<TileJson>(url)
 
-/** sans forecastmanager, le bloc prévision n'existe pas */
+/** sans forecastmanager, ni le bloc prévision ni le bloc villes n'existent */
 export const hasForecast = Boolean(FORECAST)
 
 /** Une carte de prévision telle que le serveur la garde : le dernier rendu du
@@ -200,3 +207,25 @@ export interface PromotedForecast extends StoredImage {
 
 export const promoteForecast = (date: string, period: string, preset: string) =>
   call<PromotedForecast>(FORECAST, { method: 'POST', body: JSON.stringify({ date, period, preset }) })
+
+/** La prévision publiée d'un créneau, ville par ville : ce qu'un bloc villes fige. */
+export interface CityTable {
+  date: string
+  period: string
+  periodLabel: string
+  units: NonNullable<CitiesBlock['units']>
+  rows: CityForecastRow[]
+  version: string
+}
+
+export interface CityForecasts {
+  /** toutes les villes du site, pour le choix du bloc, par nom */
+  cities: { slug: string; name: string }[]
+  /** null tant que rien n'est publié pour ce créneau */
+  table: CityTable | null
+}
+
+export const cityForecasts = (date: string, period: string) =>
+  call<CityForecasts>(
+    `${FORECAST_CITIES}?date=${encodeURIComponent(date)}&period=${encodeURIComponent(period)}`,
+  )

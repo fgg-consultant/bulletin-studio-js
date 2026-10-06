@@ -5,6 +5,7 @@ import { t } from '../i18n'
 import { duplicateBlock, removeBlock, ui } from '../store'
 import type { Block } from '../types'
 import ButtonBlock from './blocks/ButtonBlock.vue'
+import CitiesBlock from './blocks/CitiesBlock.vue'
 import DateBlock from './blocks/DateBlock.vue'
 import DividerBlock from './blocks/DividerBlock.vue'
 import ForecastBlock from './blocks/ForecastBlock.vue'
@@ -26,6 +27,7 @@ const comps: Record<Block['type'], Component> = {
   image: ImageBlock,
   map: MapBlock,
   forecast: ForecastBlock,
+  cities: CitiesBlock,
   button: ButtonBlock,
   table: TableBlock,
   date: DateBlock,

@@ -1,7 +1,8 @@
 import { hasForecast } from './api'
+import { defaultBadges } from './fields'
 import { t } from './i18n'
 import { uid } from './store'
-import type { Block } from './types'
+import type { Block, Cadence } from './types'
 
 const text = (preset: 'heading' | 'text' = 'text'): Block => ({ id: uid(), type: 'text', preset, state: null })
 const image = (): Block => ({ id: uid(), type: 'image', src: null, alt: '', caption: '' })
@@ -11,12 +12,7 @@ const header = (title = '', badges = true): Block => ({
   eyebrow: t('defaults.eyebrow'),
   title,
   subtitle: '',
-  badges: badges
-    ? [
-        { id: uid(), text: t('defaults.badgeValid') },
-        { id: uid(), text: t('defaults.badgePublished') },
-      ]
-    : [],
+  badges: badges ? defaultBadges(uid) : [],
   bg: '#175243',
 })
 const cols = (ratios: number[], fill: (() => Block)[][]): Block => ({
@@ -35,7 +31,6 @@ const table = (): Block => ({
     ['', '', ''],
   ],
 })
-const date = (): Block => ({ id: uid(), type: 'date', date: new Date().toISOString().slice(0, 10), align: 'left' })
 const divider = (): Block => ({ id: uid(), type: 'divider' })
 const issueDate = (): Block => ({
   id: uid(), type: 'date', date: new Date().toISOString().slice(0, 10), issueDate: true, align: 'left',
@@ -43,6 +38,10 @@ const issueDate = (): Block => ({
 const forecast = (dayOffset: number): Block => ({
   id: uid(), type: 'forecast', period: null, preset: 'bulletin', dayOffset,
   date: null, src: null, imageId: null, version: null, periodLabel: '', alt: '', caption: '',
+})
+const cities = (dayOffset: number): Block => ({
+  id: uid(), type: 'cities', period: null, dayOffset, cities: null, columns: 2,
+  date: null, periodLabel: '', units: null, rows: null, version: null,
 })
 
 /** jetons de l'aperçu miniature dessiné sur la carte */
@@ -60,6 +59,8 @@ export interface Template {
   /** le titre du modèle créé, plutôt que « Modèle {label} » : ses numéros s'appellent
    *  « {titre} — {date} » */
   name?: string
+  /** la période de ses numéros, quotidienne par défaut */
+  cadence?: Cadence
   preview: PreviewToken[]
   make: () => Block[]
 }
@@ -102,17 +103,35 @@ export const templates: Template[] = [
     preview: [{ t: 'title' }, { t: 'cols', r: [2, 1] }, { t: 'text' }],
     make: () => [text('heading'), cols([2, 1], [[text], [image]]), text()],
   },
+  // la perspective de la décade ou du mois qui commence : badges de validité et date
+  // du bulletin suivent la période de chaque numéro
   {
     key: 'decadaire',
     label: t('starters.decadal'),
+    name: t('starters.decadal'),
+    cadence: 'dekadal',
     preview: [{ t: 'band' }, { t: 'title' }, { t: 'text' }, { t: 'cols', r: [1, 1] }, { t: 'table' }],
     make: () => [
-      header(),
-      date(),
+      header(t('starters.decadal')),
+      issueDate(),
       text('heading'),
       text(),
       divider(),
       cols([1, 1], [[text], [image]]),
+      table(),
+    ],
+  },
+  {
+    key: 'monthly',
+    label: t('starters.monthly'),
+    name: t('starters.monthly'),
+    cadence: 'monthly',
+    preview: [{ t: 'band' }, { t: 'title' }, { t: 'cols', r: [1, 1] }, { t: 'text' }, { t: 'table' }],
+    make: () => [
+      header(t('starters.monthly')),
+      text('heading'),
+      cols([1, 1], [[text], [image]]),
+      text(),
       table(),
     ],
   },
@@ -126,6 +145,14 @@ export const templates: Template[] = [
           name: t('starters.daily'),
           preview: [{ t: 'band' }, { t: 'img' }, { t: 'text' }, { t: 'img' }],
           make: () => [header(t('starters.daily'), false), issueDate(), forecast(0), text(), forecast(1)],
+        } satisfies Template,
+        // le commentaire du prévisionniste, puis la grille des villes du jour
+        {
+          key: 'cities',
+          label: t('starters.cities'),
+          name: t('starters.cities'),
+          preview: [{ t: 'band' }, { t: 'text' }, { t: 'table' }],
+          make: () => [header(t('starters.cities'), false), issueDate(), text(), cities(0)],
         } satisfies Template,
       ]
     : []),
