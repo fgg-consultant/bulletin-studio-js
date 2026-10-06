@@ -101,6 +101,48 @@ body,
   border-radius: 0.5rem 0.5rem 0 0;
 }
 
+/* ---- en-tête du PDF : l'identité de l'organisation (Canvas.vue) ----
+   logo et texte à gauche, drapeau à droite. Hors du document, il n'apparaît qu'en
+   aperçu PDF et à l'impression ; le header qui le suit perd alors ses coins arrondis,
+   il ne touche plus le haut de la page */
+.bs-letterhead {
+  display: none;
+  align-items: center;
+  gap: 1rem;
+  padding: var(--pad-y) var(--pad-x) calc(var(--pad-y) / 2);
+}
+.bs-letterhead-logo {
+  height: 3.5rem;
+  width: auto;
+  max-width: 40%;
+  object-fit: contain;
+}
+.bs-letterhead-text {
+  flex: 1;
+  margin: 0;
+  max-width: 28rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #1e293b;
+}
+/* hauteur et largeur auto : l'image se réduit sans se déformer, et le filet la suit */
+.bs-letterhead-flag {
+  max-height: 2.5rem;
+  max-width: 5rem;
+  width: auto;
+  height: auto;
+  margin-inline-start: auto;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgb(15 23 42 / 0.12); /* un drapeau blanc sur fond blanc */
+}
+.bs-mode-pdf .bs-letterhead {
+  display: flex;
+}
+.bs-mode-pdf .bs-letterhead + .bs-body > [data-block-type='header']:first-child .bs-header {
+  border-radius: 0;
+}
+
 /* ---- colonnes responsives selon le mode d'aperçu ----
    desktop : toutes les colonnes sur une ligne
    pdf     : 2 colonnes max (les rangées de 3+ passent à la ligne)
@@ -152,6 +194,9 @@ body,
   }
   .bs-page > * {
     min-height: 0 !important;
+  }
+  .bs-letterhead {
+    display: flex;
   }
   .bs-body > [data-block-type='header'] .bs-header {
     border-radius: 0 !important;

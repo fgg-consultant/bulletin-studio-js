@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import draggable from 'vuedraggable'
 import { LayoutTemplate } from 'lucide-vue-next'
+import { letterhead } from '../api'
 import { t } from '../i18n'
 import { doc, ui } from '../store'
 import BlockRenderer from './BlockRenderer.vue'
@@ -12,6 +13,12 @@ const widths = { desktop: 'max-w-[980px]', pdf: 'max-w-[770px]', mobile: 'max-w-
   <main class="bs-canvas bs-dots min-h-0 flex-1 overflow-y-auto" :class="`bs-mode-${ui.device}`" @click="ui.selectedId = null">
     <div class="mx-auto my-10 px-6 transition-all duration-300" :class="widths[ui.device]">
       <div class="bs-page relative rounded-lg border border-slate-200 bg-white shadow-[0_8px_30px_rgba(2,8,23,0.08)]">
+        <!-- en aperçu PDF et à l'impression seulement : la page publique a la barre de climweb -->
+        <div v-if="letterhead.logo || letterhead.flag || letterhead.text" class="bs-letterhead">
+          <img v-if="letterhead.logo" :src="letterhead.logo" alt="" class="bs-letterhead-logo" />
+          <p v-if="letterhead.text" class="bs-letterhead-text">{{ letterhead.text }}</p>
+          <img v-if="letterhead.flag" :src="letterhead.flag" alt="" class="bs-letterhead-flag" />
+        </div>
         <draggable
           v-model="doc.blocks"
           group="blocks"

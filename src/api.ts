@@ -14,6 +14,13 @@ const FORECAST_CITIES = mount?.dataset.forecastCitiesUrl ?? ''
 
 /** le fuseau du site : celui du brouillon quotidien, pas forcément celui du navigateur */
 export const siteTimeZone = mount?.dataset.timeZone ?? ''
+/** l'identité de l'organisation (réglages climweb > Organisation), en tête du bulletin
+ *  imprimé : logo, drapeau, et le texte que la barre de climweb met à côté */
+export const letterhead = {
+  logo: mount?.dataset.letterheadLogo ?? '',
+  flag: mount?.dataset.letterheadFlag ?? '',
+  text: mount?.dataset.letterheadText ?? '',
+}
 const CSRF = mount?.dataset.csrfToken ?? ''
 
 export interface BulletinMeta {
