@@ -1,17 +1,18 @@
-/** Les dates insérées dans l'en-tête : `{start}`, `{end}`, `{period}`, `{published}`.
+/** Les dates insérées dans l'en-tête : `{start}`, `{end}`, `{period}`, `{previous}`,
+ *  `{published}`.
  *
  *  Un modèle les pose ; chaque numéro les remplit avec la période qu'il couvre, au
  *  moment d'afficher et de rendre le html — le document garde les champs, pas les
  *  dates. Corriger la période d'un numéro les met donc à jour, comme le bloc « date du
  *  bulletin ». Les dates sont dans la langue de l'admin, comme le reste du studio. */
 import { siteTimeZone } from './api'
-import { formatDay, formatDayRange, formatMonth, t } from './i18n'
+import { addDays, formatDay, formatDayRange, formatMonth, t } from './i18n'
 import type { Cadence } from './types'
 
-export const FIELDS = ['start', 'end', 'period', 'published'] as const
+export const FIELDS = ['start', 'end', 'period', 'previous', 'published'] as const
 export type Field = (typeof FIELDS)[number]
 
-const PATTERN = /\{(start|end|period|published)\}/g
+const PATTERN = new RegExp(`\\{(${FIELDS.join('|')})\\}`, 'g')
 
 /** la période d'un numéro, et le jour où il paraît */
 export interface IssueDates {
@@ -34,6 +35,22 @@ export function siteToday(): string {
   }
 }
 
+/** une période dans la tournure de sa cadence : « 11–20 octobre 2026 », « octobre 2026 » */
+function span(start: string, end: string, cadence: Cadence): string {
+  if (end === start) return formatDay(start)
+  return cadence === 'monthly' ? formatMonth(start) : formatDayRange(start, end)
+}
+
+/** la période d'avant, de même cadence : la décade écoulée dont un bulletin
+ *  agrométéorologique fait le bilan avant les perspectives de la sienne */
+function previous(d: IssueDates): [string, string] {
+  const end = addDays(d.start, -1)
+  if (d.cadence === 'daily') return [end, end]
+  const day = Number(end.slice(8))
+  const first = d.cadence === 'monthly' || day <= 10 ? 1 : day <= 20 ? 11 : 21
+  return [`${end.slice(0, 8)}${String(first).padStart(2, '0')}`, end]
+}
+
 function value(field: Field, d: IssueDates): string {
   switch (field) {
     case 'start':
@@ -43,8 +60,9 @@ function value(field: Field, d: IssueDates): string {
     case 'published':
       return formatDay(d.published)
     case 'period':
-      if (d.end === d.start) return formatDay(d.start)
-      return d.cadence === 'monthly' ? formatMonth(d.start) : formatDayRange(d.start, d.end)
+      return span(d.start, d.end, d.cadence)
+    case 'previous':
+      return span(...previous(d), d.cadence)
   }
 }
 

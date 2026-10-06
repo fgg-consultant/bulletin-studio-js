@@ -81,6 +81,8 @@ async function browse() {
       class="flex flex-col items-center gap-2.5 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-8"
     >
       <ImageIcon :size="26" class="text-slate-400" />
+      <!-- la légende d'un modèle dit quelle carte attend ici -->
+      <p v-if="block.caption?.trim()" class="text-center text-sm font-medium text-slate-600">{{ block.caption }}</p>
       <div class="flex items-center gap-2">
         <button
           class="flex items-center gap-1.5 rounded-md bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-50"

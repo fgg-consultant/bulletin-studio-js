@@ -1,12 +1,22 @@
+import { $createHeadingNode } from '@lexical/rich-text'
+import { $createTextNode, $getRoot, createEditor } from 'lexical'
 import { hasForecast } from './api'
-import { defaultBadges } from './fields'
+import { AS_FIELDS, defaultBadges } from './fields'
 import { t } from './i18n'
+import { nodes, theme } from './lexical'
 import { uid } from './store'
-import type { Block, Cadence } from './types'
+import type { Block, Cadence, HeaderBlock } from './types'
 
 const text = (preset: 'heading' | 'text' = 'text'): Block => ({ id: uid(), type: 'text', preset, state: null })
-const image = (): Block => ({ id: uid(), type: 'image', src: null, alt: '', caption: '' })
-const header = (title = '', badges = true): Block => ({
+/** un titre déjà écrit : le plan d'un modèle, que chaque numéro garde */
+function heading(label: string, tag: 'h2' | 'h3' = 'h2'): Block {
+  const editor = createEditor({ nodes, theme, onError: (e) => console.error(e) })
+  editor.update(() => $getRoot().append($createHeadingNode(tag).append($createTextNode(label))), { discrete: true })
+  return { id: uid(), type: 'text', preset: 'heading', state: JSON.stringify(editor.getEditorState().toJSON()) }
+}
+/** la légende dit quelle carte va là : sans image, rien n'est publié */
+const image = (caption = ''): Block => ({ id: uid(), type: 'image', src: null, alt: '', caption })
+const header = (title = '', badges = true): HeaderBlock => ({
   id: uid(),
   type: 'header',
   eyebrow: t('defaults.eyebrow'),
@@ -120,6 +130,65 @@ export const templates: Template[] = [
       cols([1, 1], [[text], [image]]),
       table(),
     ],
+  },
+  // le plan commun des bulletins agrométéorologiques décadaires de quatre services
+  // (Bénin, Burkina Faso, Kenya, Tchad) : le bilan de la décade écoulée, puis les
+  // perspectives et les conseils de celle du numéro. Les cartes sont des images ; un
+  // service supprime dans son modèle les sections qu'il ne produit pas.
+  {
+    key: 'agromet-dekadal',
+    label: t('starters.agromet'),
+    name: t('starters.agromet'),
+    cadence: 'dekadal',
+    preview: [
+      { t: 'band' }, { t: 'title' }, { t: 'text' }, { t: 'cols', r: [1, 1] },
+      { t: 'title' }, { t: 'cols', r: [1, 1] }, { t: 'text' },
+    ],
+    make: () => {
+      const map = (key: string) => () => image(t(`agromet.${key}`))
+      const h3 = (key: string) => () => heading(t(`agromet.${key}`), 'h3')
+      return [
+        {
+          ...header(t('starters.agromet')),
+          eyebrow: t('agromet.eyebrow'),
+          subtitle: t('agromet.subtitle'),
+          badges: [
+            { id: uid(), text: t('agromet.badgePast', AS_FIELDS) },
+            { id: uid(), text: t('agromet.badgeOutlook', AS_FIELDS) },
+            { id: uid(), text: t('defaults.badgePublished', AS_FIELDS) },
+          ],
+        },
+        heading(t('agromet.highlights')),
+        text(),
+        heading(t('agromet.rainfall')),
+        text(),
+        cols([1, 1], [[map('rainDekad')], [map('rainAnomaly')]]),
+        heading(t('agromet.season'), 'h3'),
+        text(),
+        cols([1, 1], [[map('seasonTotal')], [map('seasonAnomaly')]]),
+        heading(t('agromet.conditions')),
+        cols([1, 1], [
+          [h3('temperature'), text, map('temperatureMap')],
+          [h3('soil'), text, map('soilMap')],
+        ]),
+        heading(t('agromet.vegetation')),
+        text(),
+        cols([1, 1], [[map('ndvi')], [map('ndviAnomaly')]]),
+        heading(t('agromet.crops'), 'h3'),
+        text(),
+        heading(t('agromet.outlook')),
+        cols([1, 1], [[text], [map('outlookMap')]]),
+        heading(t('agromet.advice')),
+        text(),
+        cols([1, 1], [
+          [h3('adviceCrops'), text],
+          [h3('adviceLivestock'), text],
+        ]),
+        divider(),
+        heading(t('agromet.contacts'), 'h3'),
+        text(),
+      ]
+    },
   },
   {
     key: 'monthly',
