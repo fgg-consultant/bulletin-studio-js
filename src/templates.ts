@@ -1,19 +1,50 @@
+import { $createListItemNode, $createListNode } from '@lexical/list'
 import { $createHeadingNode } from '@lexical/rich-text'
-import { $createTextNode, $getRoot, createEditor } from 'lexical'
+import {
+  $createParagraphNode,
+  $createTextNode,
+  $getRoot,
+  createEditor,
+  type ElementNode,
+  type LexicalNode,
+} from 'lexical'
 import { hasForecast } from './api'
 import { AS_FIELDS, defaultBadges } from './fields'
 import { t } from './i18n'
 import { nodes, theme } from './lexical'
 import { uid } from './store'
-import type { Block, Cadence, HeaderBlock } from './types'
+import type { Block, Cadence, HeaderBlock, TextBlock } from './types'
 
 const text = (preset: 'heading' | 'text' = 'text'): Block => ({ id: uid(), type: 'text', preset, state: null })
-/** un titre déjà écrit : le plan d'un modèle, que chaque numéro garde */
-function heading(label: string, tag: 'h2' | 'h3' = 'h2'): Block {
-  const editor = createEditor({ nodes, theme, onError: (e) => console.error(e) })
-  editor.update(() => $getRoot().append($createHeadingNode(tag).append($createTextNode(label))), { discrete: true })
-  return { id: uid(), type: 'text', preset: 'heading', state: JSON.stringify(editor.getEditorState().toJSON()) }
+
+/** un texte déjà écrit : un paragraphe, une liste à puces (`ul`) ou numérotée (`ol`), un
+ *  titre ; `**gras**` dans le texte */
+type Rich = string | { ul: string[] } | { ol: string[] } | { h2: string } | { h3: string }
+
+function $inline(parent: ElementNode, s: string): ElementNode {
+  s.split(/\*\*(.+?)\*\*/).forEach((part, i) => {
+    if (part) parent.append(i % 2 ? $createTextNode(part).toggleFormat('bold') : $createTextNode(part))
+  })
+  return parent
 }
+
+function $rich(part: Rich): LexicalNode {
+  if (typeof part === 'string') return $inline($createParagraphNode(), part)
+  if ('h2' in part) return $inline($createHeadingNode('h2'), part.h2)
+  if ('h3' in part) return $inline($createHeadingNode('h3'), part.h3)
+  const list = $createListNode('ul' in part ? 'bullet' : 'number')
+  for (const item of 'ul' in part ? part.ul : part.ol) list.append($inline($createListItemNode(), item))
+  return list
+}
+
+/** le plan et les phrases d'un modèle, que chaque numéro garde ou réécrit */
+function rich(...parts: Rich[]): TextBlock {
+  const editor = createEditor({ nodes, theme, onError: (e) => console.error(e) })
+  editor.update(() => $getRoot().append(...parts.map($rich)), { discrete: true })
+  return { id: uid(), type: 'text', preset: 'text', state: JSON.stringify(editor.getEditorState().toJSON()) }
+}
+const heading = (label: string): Block => ({ ...rich({ h2: label }), preset: 'heading' })
+
 /** la légende dit quelle carte va là : sans image, rien n'est publié */
 const image = (caption = ''): Block => ({ id: uid(), type: 'image', src: null, alt: '', caption })
 const header = (title = '', badges = true): HeaderBlock => ({
@@ -31,16 +62,13 @@ const cols = (ratios: number[], fill: (() => Block)[][]): Block => ({
   ratios,
   columns: ratios.map((_, i) => (fill[i] ?? []).map((f) => f())),
 })
-const table = (): Block => ({
-  id: uid(),
-  type: 'table',
-  header: true,
-  rows: [
+const table = (
+  rows = [
     ['', '', ''],
     ['', '', ''],
     ['', '', ''],
   ],
-})
+): Block => ({ id: uid(), type: 'table', header: true, rows })
 const divider = (): Block => ({ id: uid(), type: 'divider' })
 const issueDate = (): Block => ({
   id: uid(), type: 'date', date: new Date().toISOString().slice(0, 10), issueDate: true, align: 'left',
@@ -131,62 +159,86 @@ export const templates: Template[] = [
       table(),
     ],
   },
-  // le plan commun des bulletins agrométéorologiques décadaires de quatre services
-  // (Bénin, Burkina Faso, Kenya, Tchad) : le bilan de la décade écoulée, puis les
-  // perspectives et les conseils de celle du numéro. Les cartes sont des images ; un
-  // service supprime dans son modèle les sections qu'il ne produit pas.
+  // le bulletin agrométéorologique décadaire que proposent les services de 17 pays
+  // (revue « 10-day agromet bulletin », oct. 2026) : la page 1 se suffit à elle-même
+  // (messages clés, petite carte de pluie, perspectives en une ligne, trois actions),
+  // les cartes qui l'étayent suivent, puis les conseils par région et par secteur.
+  // Les phrases par défaut sont écrites, [entre crochets] ce que chaque numéro
+  // remplace. Les cartes sont des images : chaque légende dit sa période, observée
+  // ou prévue, et le produit du catalogue Data Helper qui la remplit, qu'un service
+  // remplace par sa carte nationale. Trois sections sont facultatives (cultures et
+  // marchés, hydrologie, contexte saisonnier) : un service supprime de son modèle
+  // celles qu'il ne publie pas.
   {
     key: 'agromet-dekadal',
     label: t('starters.agromet'),
     name: t('starters.agromet'),
     cadence: 'dekadal',
     preview: [
-      { t: 'band' }, { t: 'title' }, { t: 'text' }, { t: 'cols', r: [1, 1] },
-      { t: 'title' }, { t: 'cols', r: [1, 1] }, { t: 'text' },
+      { t: 'band' }, { t: 'title' }, { t: 'cols', r: [3, 2] }, { t: 'text' },
+      { t: 'title' }, { t: 'cols', r: [1, 1] }, { t: 'table' },
     ],
     make: () => {
-      const map = (key: string) => () => image(t(`agromet.${key}`))
-      const h3 = (key: string) => () => heading(t(`agromet.${key}`), 'h3')
+      const a = (key: string, params: Record<string, string> = {}) => t(`agromet.${key}`, params)
+      // les dates de la légende suivent chaque numéro, comme celles de l'en-tête
+      const map = (key: string) => () => image(a(key, AS_FIELDS))
+      const row = (key: string) => a(key).split('|').map((cell) => cell.trim())
+      const stations = row('stationsHead')
       return [
         {
           ...header(t('starters.agromet')),
-          eyebrow: t('agromet.eyebrow'),
-          subtitle: t('agromet.subtitle'),
+          eyebrow: a('eyebrow'),
+          subtitle: a('subtitle'),
           badges: [
-            { id: uid(), text: t('agromet.badgePast', AS_FIELDS) },
-            { id: uid(), text: t('agromet.badgeOutlook', AS_FIELDS) },
+            { id: uid(), text: a('badgeNumber', AS_FIELDS) },
+            { id: uid(), text: a('badgePast', AS_FIELDS) },
+            { id: uid(), text: a('badgeOutlook', AS_FIELDS) },
             { id: uid(), text: t('defaults.badgePublished', AS_FIELDS) },
           ],
         },
-        heading(t('agromet.highlights')),
-        text(),
-        heading(t('agromet.rainfall')),
-        text(),
-        cols([1, 1], [[map('rainDekad')], [map('rainAnomaly')]]),
-        heading(t('agromet.season'), 'h3'),
-        text(),
-        cols([1, 1], [[map('seasonTotal')], [map('seasonAnomaly')]]),
-        heading(t('agromet.conditions')),
-        cols([1, 1], [
-          [h3('temperature'), text, map('temperatureMap')],
-          [h3('soil'), text, map('soilMap')],
+        // page 1 : ce qui s'est passé, ce qui vient, que faire
+        heading(a('keyMessages')),
+        cols([3, 2], [
+          [() => rich({ ul: [a('keyRain'), a('keyTemperature'), a('keyCrops'), a('keyWater')] },
+            { h3: a('nextDays') }, a('outlookLine'))],
+          [map('capRainSmall')],
         ]),
-        heading(t('agromet.vegetation')),
-        text(),
-        cols([1, 1], [[map('ndvi')], [map('ndviAnomaly')]]),
-        heading(t('agromet.crops'), 'h3'),
-        text(),
-        heading(t('agromet.outlook')),
-        cols([1, 1], [[text], [map('outlookMap')]]),
-        heading(t('agromet.advice')),
-        text(),
-        cols([1, 1], [
-          [h3('adviceCrops'), text],
-          [h3('adviceLivestock'), text],
-        ]),
+        rich({ h3: a('actions') }, { ol: [a('action1'), a('action2'), a('action3')] }),
         divider(),
-        heading(t('agromet.contacts'), 'h3'),
-        text(),
+        // les cartes qui l'étayent
+        rich({ h2: a('rainfall') }, a('rainText'), a('anomalyText')),
+        cols([1, 1], [[map('capRain')], [map('capAnomaly')]]),
+        // une légende en mots, la même d'un numéro à l'autre
+        table([row('legendHead'), row('legendBelow'), row('legendNear'), row('legendAbove')]),
+        rich({ h2: a('season') }, a('seasonText')),
+        cols([1, 1], [[map('capSeason')], [map('capRainyDays')]]),
+        rich({ h2: a('temperature') }, a('temperatureText')),
+        cols([1, 1], [[map('capTmax')], [map('capTmin')]]),
+        rich({ h2: a('water') }, a('waterText')),
+        cols([1, 1], [[map('capSoil')], [map('capWrsi')]]),
+        cols([1, 1], [[map('capNdvi')], [map('capNdviAnomaly')]]),
+        heading(a('outlook')),
+        cols([1, 1], [[map('capForecastRain')], [map('capForecastTemp')]]),
+        rich({ ul: [a('outlookRegion'), a('outlookRegion'), a('outlookRegion')] }, a('efiText')),
+        // chaque ligne : la région, ce qui l'attend, puis quoi faire, secteur par secteur
+        heading(a('advice')),
+        table([row('adviceHead'), row('adviceRow1'), row('adviceRow2'), row('adviceRow3')]),
+        // facultatives
+        rich({ h2: a('crops') }, a('cropsNote'), { ul: [a('cropStages'), a('pests'), a('pastures'), a('markets')] }),
+        rich({ h2: a('hydrology') }, a('hydrologyNote'), a('river')),
+        image(a('capRiver', AS_FIELDS)),
+        rich({ h2: a('seasonal') }, a('seasonalNote'), a('seasonalText')),
+        image(a('capSeasonal')),
+        divider(),
+        rich(
+          { h2: a('sources') },
+          { h3: a('dataSources') },
+          { ul: [a('sourceRain'), a('sourceTemperature'), a('sourceWater'), a('sourceForecast')] },
+          a('sourceNormal'),
+          { h3: a('stations') },
+        ),
+        table([stations, ...[1, 2, 3].map(() => [a('station'), ...stations.slice(1).map(() => '')])]),
+        rich({ h3: a('contacts') }, a('contactsText'), a('partners')),
       ]
     },
   },

@@ -20,7 +20,7 @@ export interface RenderContext {
   dates?: IssueDates | null
 }
 
-/** un texte de l'en-tête, ses dates insérées remplies */
+/** un texte de l'en-tête ou une légende d'image, ses dates insérées remplies */
 const fill = (text: string, ctx: RenderContext) => (ctx.dates ? fillFields(text, ctx.dates) : text)
 
 /** le texte alternatif d'une carte de prévision quand l'auteur n'en a pas écrit */
@@ -75,7 +75,7 @@ function block(b: Block, ctx: RenderContext): string {
     }
     case 'image': {
       if (!b.src) return ''
-      const caption = b.caption?.trim() ? `<figcaption class="bs-caption">${esc(b.caption)}</figcaption>` : ''
+      const caption = b.caption?.trim() ? `<figcaption class="bs-caption">${esc(fill(b.caption, ctx))}</figcaption>` : ''
       return `<figure class="bs-figure"><img src="${esc(b.src)}" alt="${esc(b.alt)}">${caption}</figure>`
     }
     case 'button': {

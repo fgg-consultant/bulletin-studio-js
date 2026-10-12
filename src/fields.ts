@@ -1,5 +1,5 @@
 /** Les dates insérées dans l'en-tête : `{start}`, `{end}`, `{period}`, `{previous}`,
- *  `{published}`.
+ *  `{published}`, et le numéro de la période dans l'année `{number}`.
  *
  *  Un modèle les pose ; chaque numéro les remplit avec la période qu'il couvre, au
  *  moment d'afficher et de rendre le html — le document garde les champs, pas les
@@ -9,7 +9,7 @@ import { siteTimeZone } from './api'
 import { addDays, formatDay, formatDayRange, formatMonth, t } from './i18n'
 import type { Cadence } from './types'
 
-export const FIELDS = ['start', 'end', 'period', 'previous', 'published'] as const
+export const FIELDS = ['start', 'end', 'period', 'previous', 'published', 'number'] as const
 export type Field = (typeof FIELDS)[number]
 
 const PATTERN = new RegExp(`\\{(${FIELDS.join('|')})\\}`, 'g')
@@ -51,6 +51,15 @@ function previous(d: IssueDates): [string, string] {
   return [`${end.slice(0, 8)}${String(first).padStart(2, '0')}`, end]
 }
 
+/** le rang de la période dans son année : décade 1–36, mois 1–12, jour 1–366 — le
+ *  numéro que portent les bulletins décadaires (« N° 28 ») */
+function number(d: IssueDates): number {
+  const [y, m, day] = d.start.split('-').map(Number)
+  if (d.cadence === 'monthly') return m
+  if (d.cadence === 'dekadal') return (m - 1) * 3 + (day <= 10 ? 1 : day <= 20 ? 2 : 3)
+  return (Date.UTC(y, m - 1, day) - Date.UTC(y, 0, 1)) / 86_400_000 + 1
+}
+
 function value(field: Field, d: IssueDates): string {
   switch (field) {
     case 'start':
@@ -63,6 +72,8 @@ function value(field: Field, d: IssueDates): string {
       return span(d.start, d.end, d.cadence)
     case 'previous':
       return span(...previous(d), d.cadence)
+    case 'number':
+      return String(number(d))
   }
 }
 

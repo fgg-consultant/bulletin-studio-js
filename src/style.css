@@ -192,7 +192,10 @@ body,
     --pad-x: 12mm;
     --pad-y: 10mm;
   }
-  .bs-page > * {
+  /* la hauteur d'une zone de dépôt : une colonne dont les cartes restent à choisir ne
+     creuse pas de blanc */
+  .bs-page > *,
+  .bs-cols > * {
     min-height: 0 !important;
   }
   .bs-letterhead {

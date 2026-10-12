@@ -3,8 +3,8 @@ import { ref } from 'vue'
 import { Image as ImageIcon, Library, RefreshCw, Upload, X } from 'lucide-vue-next'
 import * as api from '../../api'
 import { t } from '../../i18n'
-import { pastePlain } from '../../store'
 import type { ImageBlock } from '../../types'
+import FieldText from '../FieldText.vue'
 
 const props = defineProps<{ block: ImageBlock; selected: boolean }>()
 
@@ -17,13 +17,6 @@ const error = ref<string | null>(null)
 const picking = ref(false)
 const query = ref('')
 const results = ref<api.StoredImage[]>([])
-
-// initialise le texte des contenteditable sans le lier (le caret sauterait à chaque frappe)
-const vInitText = {
-  mounted: (el: HTMLElement, { value }: { value: string }) => {
-    el.textContent = value
-  },
-}
 
 function use(image: api.StoredImage) {
   props.block.src = image.url
@@ -76,13 +69,20 @@ async function browse() {
 
 <template>
   <div class="relative">
+    <!-- sans image, rien n'est publié : rien ne s'imprime non plus -->
     <div
       v-if="!block.src"
-      class="flex flex-col items-center gap-2.5 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-8"
+      class="flex flex-col items-center gap-2.5 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-8 print:hidden"
     >
       <ImageIcon :size="26" class="text-slate-400" />
       <!-- la légende d'un modèle dit quelle carte attend ici -->
-      <p v-if="block.caption?.trim()" class="text-center text-sm font-medium text-slate-600">{{ block.caption }}</p>
+      <FieldText
+        v-if="block.caption?.trim()"
+        v-model="block.caption"
+        tag="p"
+        class="text-center text-sm font-medium text-slate-600 outline-none"
+        @click.stop
+      />
       <div class="flex items-center gap-2">
         <button
           class="flex items-center gap-1.5 rounded-md bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-50"
@@ -116,17 +116,14 @@ async function browse() {
 
     <figure v-else>
       <img :src="block.src" :alt="block.alt" class="block w-full rounded" />
-      <figcaption
-        v-init-text="block.caption ?? ''"
-        contenteditable="true"
-        spellcheck="false"
-        :data-placeholder="t('image.caption')"
-        class="mt-1.5 text-center text-xs leading-relaxed text-slate-500 italic outline-none"
+      <!-- des dates insérées, comme l'en-tête : celles de chaque numéro -->
+      <FieldText
+        v-model="block.caption"
+        tag="figcaption"
+        :placeholder="t('image.caption')"
+        class="mt-1.5 block text-center text-xs leading-relaxed text-slate-500 italic outline-none"
         @click.stop
-        @input="block.caption = ($event.target as HTMLElement).textContent ?? ''"
-        @paste="pastePlain"
-        @keydown.enter.prevent
-      ></figcaption>
+      />
       <div v-if="selected" class="mt-2 flex items-center gap-2" @click.stop>
         <input
           v-model="block.alt"

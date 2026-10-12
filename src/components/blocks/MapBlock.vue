@@ -114,7 +114,7 @@ onBeforeUnmount(() => mounted.value?.destroy())
   <div>
     <div
       v-if="!block.tiles"
-      class="flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-8"
+      class="flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-8 print:hidden"
       @click.stop
     >
       <MapIcon :size="26" class="text-slate-400" />
