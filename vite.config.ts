@@ -22,10 +22,15 @@ export default defineConfig({
         embed: './src/embed.ts',
       },
       output: {
-        // noms stables : le template django les charge via {% static %}
+        // noms stables : le template django les charge via {% static %}, qui les
+        // hache en production (ManifestStaticFilesStorage)
         entryFileNames: (chunk) =>
           chunk.name === 'app' ? 'bulletin-studio.js' : 'bulletin-studio-[name].js',
-        chunkFileNames: 'bulletin-studio-[name].js',
+        // Les morceaux, eux, sont importés par chemin relatif, que django ne réécrit
+        // pas : sans hash, un navigateur garde l'ancien en cache sous le même nom, et
+        // la nouvelle entrée y cherche des exports qui n'existent plus — l'app ne
+        // démarre pas (« bundle is not installed »), les cartes publiées non plus.
+        chunkFileNames: 'bulletin-studio-[name]-[hash].js',
         assetFileNames: (info) => {
           const name = info.names?.[0] ?? ''
           if (name === 'content.css') return 'bulletin-studio-content.css'

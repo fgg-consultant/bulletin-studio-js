@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick } from 'vue'
+import { computed, nextTick } from 'vue'
 import draggable from 'vuedraggable'
 import {
   Building2,
@@ -128,6 +128,14 @@ const layouts: PaletteItem[] = [
   { key: 'c21', label: t('sidebar.c21'), type: 'columns', ratios: [2, 1], create: columns([2, 1]) },
 ]
 
+/** Pas de texte sur l'image d'un flash : il est dans le post, qui l'accompagne (la
+ *  légende de l'image sur WhatsApp). Le bandeau, son titre et sa date, suffit. Ni
+ *  bouton, qui ne se clique pas sur une image. */
+const NOT_IN_FLASH: BlockType[] = ['text', 'table', 'date', 'button']
+const palette = computed(() =>
+  doc.kind === 'flash' ? content.filter((i) => !NOT_IN_FLASH.includes(i.type)) : content,
+)
+
 const paletteGroup = { name: 'blocks', pull: 'clone', put: false }
 const clone = (item: PaletteItem) => item.create()
 
@@ -142,13 +150,17 @@ function add(item: PaletteItem) {
 </script>
 
 <template>
-  <aside class="flex w-72 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white">
+  <!-- plus étroite pour un flash : peu de blocs, et le texte du post a besoin de place -->
+  <aside
+    class="flex shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white"
+    :class="doc.kind === 'flash' ? 'w-56' : 'w-72'"
+  >
     <div class="px-4 pt-5">
       <h2 class="text-sm font-semibold text-slate-800">{{ t('sidebar.content') }}</h2>
       <p class="mt-0.5 text-xs leading-relaxed text-slate-500">{{ t('sidebar.contentHint') }}</p>
     </div>
     <draggable
-      :list="content"
+      :list="palette"
       :group="paletteGroup"
       :clone="clone"
       :sort="false"

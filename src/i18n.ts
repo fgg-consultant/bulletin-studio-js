@@ -18,7 +18,9 @@ const CATALOGS: Record<string, Dict> = { ar, en, es, fr, pt }
 
 function resolve(): string {
   const raw =
-    document.getElementById('bulletin-studio-app')?.dataset.locale || navigator.language || 'en'
+    globalThis.document?.getElementById('bulletin-studio-app')?.dataset.locale ||
+    globalThis.navigator?.language ||
+    'en'
   const code = raw.split('-')[0].toLowerCase()
   return code in CATALOGS ? code : 'en'
 }
@@ -26,7 +28,9 @@ function resolve(): string {
 export const locale = resolve()
 
 const catalog = CATALOGS[locale]
-const plural = new Intl.PluralRules(locale)
+// le catalogue portugais est européen : « pt » seul prend les règles du Brésil, où 0
+// est singulier (« 0 boletim »)
+const plural = new Intl.PluralRules(locale === 'pt' ? 'pt-PT' : locale)
 
 function lookup(dict: Dict, path: string): Msg | Dict | undefined {
   return path.split('.').reduce<Msg | Dict | undefined>(
@@ -73,13 +77,82 @@ export function formatDayRange(from: string | null | undefined, to: string | nul
   return a && b ? dateOnly.formatRange(a, b) : formatDay(from)
 }
 export const formatDateTime = (d: Date | number) => dateTime.format(d)
-/** `n` jours après une date ISO, en ISO */
-export function addDays(iso: string, n: number): string {
-  const d = new Date(`${iso}T00:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + n)
-  return d.toISOString().slice(0, 10)
+export { addDays } from './periods'
+
+const shortDay = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' })
+const shortDayThisYear = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' })
+const longDay = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+const longDayThisYear = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' })
+const clock = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' })
+const relativeDay = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
+
+/** « 8 nov. 2026 » */
+export function formatShortDay(iso: string | null | undefined): string {
+  const d = day(iso)
+  return d ? shortDay.format(d) : ''
+}
+/** « 1–10 nov. 2026 » */
+export function formatShortRange(from: string | null | undefined, to: string | null | undefined): string {
+  const a = day(from)
+  const b = day(to)
+  return a && b ? shortDay.formatRange(a, b) : formatShortDay(from)
+}
+/** « samedi 8 novembre 2026 » */
+export function formatLongDay(iso: string | null | undefined): string {
+  const d = day(iso)
+  return d ? longDay.format(d) : ''
+}
+
+/** les jours de `from` à `to`, deux dates du calendrier local */
+const daysBetween = (from: Date, to: Date) =>
+  Math.round(
+    (Date.UTC(to.getFullYear(), to.getMonth(), to.getDate()) -
+      Date.UTC(from.getFullYear(), from.getMonth(), from.getDate())) /
+      86_400_000,
+  )
+
+/** le jour d'un instant, près d'aujourd'hui : « aujourd'hui », « hier », « 6 nov. »,
+ *  « 6 nov. 2025 » — à l'heure du navigateur, comme toute heure qu'on lui montre */
+export function formatRecentDay(when: number, now = Date.now()): string {
+  const d = new Date(when)
+  const n = new Date(now)
+  const diff = daysBetween(n, d)
+  if (Math.abs(diff) <= 1) return relativeDay.format(diff, 'day')
+  return (d.getFullYear() === n.getFullYear() ? shortDayThisYear : shortDay).format(d)
+}
+/** le jour d'un instant, sans « hier » : « 1 nov. », « 1 nov. 2025 » — après « Publié
+ *  le », où un jour relatif ne se dit pas dans toutes les langues */
+export function formatDayOf(when: number, now = Date.now()): string {
+  const d = new Date(when)
+  return (d.getFullYear() === new Date(now).getFullYear() ? shortDayThisYear : shortDay).format(d)
+}
+/** « hier, 07:38 » */
+export const formatWhen = (when: number, now = Date.now()) =>
+  t('when.dayTime', { day: formatRecentDay(when, now), time: clock.format(when) })
+
+/** « demain à 06:00 », « mercredi 11 novembre à 08:00 » : un jour ISO et une heure
+ *  HH:MM du site, tels quels — l'heure d'un brouillon automatique */
+export function formatDayAt(iso: string, hhmm: string, today: string): string {
+  const d = day(iso)
+  const n = day(today)
+  if (!d || !n) return hhmm
+  const diff = daysBetween(n, d)
+  const label =
+    Math.abs(diff) <= 1
+      ? relativeDay.format(diff, 'day')
+      : (d.getFullYear() === n.getFullYear() ? longDayThisYear : longDay).format(d)
+  return t('when.dayAt', { day: label, time: hhmm })
+}
+
+/** une durée écoulée, dans l'unité qui la dit le mieux : « 20 minutes », « 4 heures »,
+ *  « 7 jours » — les noms d'unités viennent d'Intl, pas du catalogue */
+export function formatAge(since: number, now = Date.now()): string {
+  const minutes = Math.max(0, Math.floor((now - since) / 60_000))
+  const [value, unit] =
+    minutes < 60 ? [minutes, 'minute'] : minutes < 48 * 60 ? [Math.floor(minutes / 60), 'hour'] : [Math.floor(minutes / 1440), 'day']
+  return new Intl.NumberFormat(locale, { style: 'unit', unit, unitDisplay: 'long' }).format(value)
 }
 
 // le libellé de dépôt d'une colonne vide vit dans un ::after : il passe par une
 // custom property, seul moyen de traduire un `content` CSS
-document.documentElement.style.setProperty('--bs-drop-label', JSON.stringify(t('canvas.dropHere')))
+globalThis.document?.documentElement.style.setProperty('--bs-drop-label', JSON.stringify(t('canvas.dropHere')))

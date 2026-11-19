@@ -46,13 +46,14 @@ const hovered = computed(() => ui.hoverId === props.block.id)
     :class="selected ? 'ring-2 ring-sky-600' : hovered ? 'ring-1 ring-sky-300' : ''"
     :data-block-type="block.type"
     :data-id="block.id"
+    :data-backdrop="ui.backdropId === block.id ? '' : undefined"
     @click.stop="ui.selectedId = block.id"
     @mouseover.stop="ui.hoverId = block.id"
     @mouseleave="ui.hoverId === block.id && (ui.hoverId = null)"
   >
     <div
       v-show="selected || hovered"
-      class="absolute -top-3.5 right-2 z-20 flex items-center overflow-hidden rounded-md border border-slate-200 bg-white shadow-md"
+      class="bs-block-tools absolute -top-3.5 right-2 z-20 flex items-center overflow-hidden rounded-md border border-slate-200 bg-white shadow-md"
     >
       <button class="drag-handle cursor-grab p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600 active:cursor-grabbing" :title="t('block.move')">
         <GripVertical :size="15" />

@@ -13,7 +13,7 @@ import { AS_FIELDS, defaultBadges } from './fields'
 import { t } from './i18n'
 import { nodes, theme } from './lexical'
 import { uid } from './store'
-import type { Block, Cadence, HeaderBlock, TextBlock } from './types'
+import type { Block, Cadence, HeaderBlock, Kind, TextBlock } from './types'
 
 const text = (preset: 'heading' | 'text' = 'text'): Block => ({ id: uid(), type: 'text', preset, state: null })
 
@@ -81,6 +81,18 @@ const cities = (dayOffset: number): Block => ({
   id: uid(), type: 'cities', period: null, dayOffset, cities: null, columns: 2,
   date: null, periodLabel: '', units: null, rows: null, version: null,
 })
+/** une carte geomanager à choisir ; dans un flash, elle prend la place qui reste */
+const map = (): Block => ({
+  id: uid(), type: 'map', layerId: null, layerTitle: '', tiles: null,
+  time: null, legend: null, bounds: null, height: 'md',
+})
+/** le bandeau d'un flash : ce qu'il annonce, et le jour, sur l'image même — une image
+ *  transférée de groupe en groupe perd tout le reste */
+const flashHeader = (title: string, bg: string): HeaderBlock => ({
+  ...header(title, false),
+  eyebrow: t('flash.eyebrow', AS_FIELDS),
+  bg,
+})
 
 /** jetons de l'aperçu miniature dessiné sur la carte */
 export type PreviewToken =
@@ -94,11 +106,15 @@ export type PreviewToken =
 export interface Template {
   key: string
   label: string
+  /** un bulletin par défaut */
+  kind?: Kind
   /** le titre du modèle créé, plutôt que « Modèle {label} » : ses numéros s'appellent
    *  « {titre} — {date} » */
   name?: string
   /** la période de ses numéros, quotidienne par défaut */
   cadence?: Cadence
+  /** un flash : le texte du post de départ */
+  caption?: string
   preview: PreviewToken[]
   make: () => Block[]
 }
@@ -274,6 +290,33 @@ export const templates: Template[] = [
           name: t('starters.cities'),
           preview: [{ t: 'band' }, { t: 'text' }, { t: 'table' }],
           make: () => [header(t('starters.cities'), false), issueDate(), text(), cities(0)],
+        } satisfies Template,
+      ]
+    : []),
+  // Les flashs médias : une image carrée et le texte de son post, pour WhatsApp,
+  // Facebook, X… Sur l'image, le bandeau dit quoi et quand, la carte fait le fond ; ce
+  // qui se passe et que faire est dans le post, la légende de l'image sur WhatsApp, et
+  // jamais sur l'image (Sidebar.vue). [Entre crochets] : ce que chaque flash remplace.
+  { key: 'flash-blank', kind: 'flash', label: t('starters.flashBlank'), preview: [], make: () => [] },
+  {
+    key: 'flash-rain',
+    kind: 'flash',
+    label: t('starters.flashRain'),
+    name: t('starters.flashRain'),
+    caption: t('flash.rainCaption'),
+    preview: [{ t: 'band' }, { t: 'img' }],
+    make: () => [flashHeader(t('flash.rainTitle'), '#0c4a6e'), map()],
+  },
+  ...(hasForecast
+    ? [
+        {
+          key: 'flash-forecast',
+          kind: 'flash',
+          label: t('starters.flashForecast'),
+          name: t('starters.flashForecast'),
+          caption: t('flash.forecastCaption'),
+          preview: [{ t: 'band' }, { t: 'img' }],
+          make: () => [flashHeader(t('flash.forecastTitle'), '#175243'), forecast(0)],
         } satisfies Template,
       ]
     : []),

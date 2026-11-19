@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import Dashboard from './components/Dashboard.vue'
 import Editor from './components/Editor.vue'
-import TemplateChooser from './components/TemplateChooser.vue'
+import NewPublicationDialog from './components/NewPublicationDialog.vue'
+import BulletinsPage from './pages/BulletinsPage.vue'
+import HomePage from './pages/HomePage.vue'
+import NewTemplatePage from './pages/NewTemplatePage.vue'
+import TemplatePage from './pages/TemplatePage.vue'
+import TemplatesPage from './pages/TemplatesPage.vue'
 import { route } from './router'
 </script>
 
 <template>
-  <Dashboard v-if="route.name === 'dashboard'" />
-  <TemplateChooser v-else-if="route.name === 'new'" />
-  <Editor v-else :id="route.id!" />
+  <Editor v-if="route.name === 'editor'" :id="route.id" />
+  <TemplatePage v-else-if="route.name === 'template'" :id="route.id" />
+  <TemplatesPage v-else-if="route.name === 'templates'" />
+  <NewTemplatePage v-else-if="route.name === 'newTemplate'" />
+  <BulletinsPage v-else-if="route.name === 'bulletins'" :query="route.query" />
+  <HomePage v-else />
+  <!-- ouverte de n'importe quelle page, et de l'éditeur d'un modèle -->
+  <NewPublicationDialog />
 </template>

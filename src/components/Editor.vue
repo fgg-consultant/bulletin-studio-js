@@ -1,194 +1,57 @@
 <script setup lang="ts">
+/** L'éditeur d'un bulletin, d'un flash ou d'un modèle : en haut où l'on est et ce
+ *  qu'on modifie (EditorHeader, EditorContext), puis la palette et la page. */
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
-import { AlarmClock, CalendarRange, Check, Download, ExternalLink, FileText, Monitor, Printer, Smartphone, Upload } from 'lucide-vue-next'
-import { siteTimeZone } from '../api'
-import { t } from '../i18n'
 import { go } from '../router'
-import { doc, exportJson, exportPdf, openBulletin, publishCurrent, ui } from '../store'
-import type { Cadence } from '../types'
+import { doc, openBulletin, settled, ui } from '../store'
 import Canvas from './Canvas.vue'
+import EditorContext from './EditorContext.vue'
+import EditorHeader from './EditorHeader.vue'
+import FlashCanvas from './FlashCanvas.vue'
+import FlashPanel from './FlashPanel.vue'
 import Sidebar from './Sidebar.vue'
 
-const props = defineProps<{ id: string }>()
+const props = defineProps<{ id: number }>()
+
+const flash = computed(() => doc.kind === 'flash')
+/** le document demandé est chargé : avant, l'en-tête dirait encore le précédent */
+const ready = computed(() => doc.id === props.id)
 
 watch(
   () => props.id,
   async (id) => {
-    if (!(await openBulletin(Number(id)))) go('#/')
+    if (!(await openBulletin(id))) go({ name: 'home' })
   },
   { immediate: true },
 )
-
-/** « 09:00 » à l'heure du site, tel que l'horloge du navigateur l'affiche — '' quand
- *  les deux s'accordent. Le brouillon part à l'heure du site : un auteur à Paris sur
- *  un site en UTC doit voir que 09:00 veut dire 11:00 chez lui. */
-function inLocalTime(hhmm: string | null, tz: string): string {
-  if (!hhmm || !tz) return ''
-  const [h, m] = hhmm.split(':').map(Number)
-  const now = new Date()
-  // l'instant où l'horloge de `tz` affiche hh:mm aujourd'hui : d'abord lu comme UTC,
-  // puis corrigé du décalage de `tz` à cet instant
-  const guess = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), h, m)
-  try {
-    const parts = Object.fromEntries(
-      new Intl.DateTimeFormat('en-US', {
-        timeZone: tz, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric',
-      })
-        .formatToParts(guess)
-        .map((p) => [p.type, Number(p.value)]),
-    )
-    const wall = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute)
-    const local = new Date(guess - (wall - guess))
-    const shown = `${String(local.getHours()).padStart(2, '0')}:${String(local.getMinutes()).padStart(2, '0')}`
-    return shown === hhmm ? '' : shown
-  } catch {
-    return '' // fuseau inconnu du navigateur
-  }
-}
-const draftLocal = computed(() => inLocalTime(doc.draftAt, siteTimeZone))
-
-const cadences: Cadence[] = ['daily', 'dekadal', 'monthly']
-
-const modes = [
-  { v: 'desktop', icon: Monitor, title: 'editor.previewDesktop' },
-  { v: 'pdf', icon: FileText, title: 'editor.previewPdf' },
-  { v: 'mobile', icon: Smartphone, title: 'editor.previewMobile' },
-] as const
 
 function onKey(e: KeyboardEvent) {
   if (e.key === 'Escape') ui.selectedId = null
 }
 onMounted(() => window.addEventListener('keydown', onKey))
-onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKey)
+  void settled() // la dernière frappe part avant que la page qu'on rejoint relise la liste
+})
 </script>
 
 <template>
-  <div class="bs-app flex h-full flex-col bg-white text-slate-800 antialiased">
-    <header class="flex h-14 shrink-0 items-center gap-3 border-b border-slate-200 px-4">
-      <a href="#/" class="flex items-center gap-2 rounded-md px-1 py-0.5 hover:bg-slate-50" :title="t('editor.back')">
-        <div class="flex size-7 items-center justify-center rounded-md bg-sky-700 text-sm font-bold text-white">B</div>
-        <span class="text-sm font-semibold tracking-tight">Bulletin Studio</span>
-      </a>
-      <div class="h-5 w-px bg-slate-200" />
-      <input
-        v-model="doc.title"
-        name="title"
-        :aria-label="t('editor.title')"
-        class="w-64 rounded-md px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-white focus:outline-2 focus:outline-sky-600"
-        :placeholder="t('editor.title')"
-      />
-      <span class="flex items-center gap-1 text-xs text-slate-400">
-        <Check v-if="ui.saved" :size="13" />
-        {{ t(ui.saved ? 'editor.saved' : 'editor.saving') }}
-      </span>
-      <span
-        v-if="doc.isTemplate"
-        class="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700"
-        :title="t('editor.templateHint')"
-      >
-        {{ t('status.template') }}
-      </span>
-      <!-- les réglages du modèle : la période de ses numéros, l'heure de leurs brouillons.
-           Les ! : wagtail dessine la flèche d'un select pour 42 px de haut, et son
-           input[type=time] est plus spécifique qu'une classe -->
-      <label
-        v-if="doc.isTemplate"
-        class="flex items-center gap-1.5 text-xs whitespace-nowrap text-slate-500"
-        :title="t('editor.cadenceHint')"
-      >
-        <CalendarRange :size="14" class="text-slate-400" />
-        <select
-          v-model="doc.cadence"
-          name="cadence"
-          :aria-label="t('editor.cadence')"
-          class="min-h-0! appearance-auto! rounded border border-slate-200 bg-none! py-0.5! ps-1! pe-0.5! text-xs! text-slate-700 focus:outline-1 focus:outline-sky-600"
-        >
-          <option v-for="c in cadences" :key="c" :value="c">{{ t(`cadence.${c}`) }}</option>
-        </select>
-      </label>
-      <label
-        v-if="doc.isTemplate"
-        class="flex items-center gap-1.5 text-xs whitespace-nowrap text-slate-500"
-        :title="t(`editor.draftHint.${doc.cadence}`, { tz: siteTimeZone })"
-      >
-        <AlarmClock :size="14" class="text-slate-400" />
-        {{ t('editor.draft') }}
-        <!-- par quart d'heure : le serveur prépare les brouillons à :00, :15, :30, :45 -->
-        <input
-          v-model="doc.draftAt"
-          type="time"
-          step="900"
-          name="draft-at"
-          class="min-h-0! w-auto! rounded border border-slate-200 px-1.5! py-0.5! text-xs! text-slate-700 focus:outline-1 focus:outline-sky-600"
-        />
-        <span class="text-slate-400">
-          {{ siteTimeZone }}<template v-if="draftLocal"> · {{ t('editor.draftLocal', { time: draftLocal }) }}</template>
-        </span>
-      </label>
-      <span v-else class="text-xs font-medium" :class="doc.live ? 'text-emerald-700' : 'text-slate-400'">
-        {{
-          doc.live
-            ? t(doc.hasUnpublishedChanges ? 'status.publishedPending' : 'status.published')
-            : t('status.draft')
-        }}
-      </span>
-
-      <div class="ml-auto flex items-center gap-3">
-        <div class="flex rounded-lg border border-slate-200 p-0.5">
-          <button
-            v-for="m in modes"
-            :key="m.v"
-            class="rounded-md p-1.5"
-            :class="ui.device === m.v ? 'bg-sky-50 text-sky-700' : 'text-slate-400 hover:text-slate-600'"
-            :title="t(m.title)"
-            @click="ui.device = m.v"
-          >
-            <component :is="m.icon" :size="16" />
-          </button>
-        </div>
-        <button
-          class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-          :title="t('editor.jsonHint')"
-          @click="exportJson"
-        >
-          <Download :size="15" />
-          {{ t('editor.json') }}
-        </button>
-        <button
-          class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-          @click="exportPdf"
-        >
-          <Printer :size="15" />
-          {{ t('editor.pdf') }}
-        </button>
-        <a
-          v-if="doc.url"
-          :href="doc.url"
-          target="_blank"
-          class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-          :title="t('editor.viewHint')"
-        >
-          <ExternalLink :size="15" />
-          {{ t('editor.view') }}
-        </a>
-        <button
-          v-if="!doc.isTemplate"
-          class="flex items-center gap-1.5 rounded-lg bg-sky-700 px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-50"
-          :disabled="doc.live && !doc.hasUnpublishedChanges"
-          :title="t('editor.publishHint')"
-          @click="publishCurrent"
-        >
-          <Upload :size="15" />
-          {{ t('editor.publish') }}
-        </button>
-      </div>
+  <div class="bs-app flex h-full flex-col bg-white text-sm text-slate-800 antialiased">
+    <!-- l'impression ne garde que le bulletin : `.bs-app > header` est masqué -->
+    <header class="shrink-0">
+      <EditorHeader />
+      <EditorContext v-if="ready" />
     </header>
 
-    <p v-if="ui.error" class="shrink-0 bg-red-50 px-4 py-2 text-sm text-red-700">{{ ui.error }}</p>
+    <p v-if="ui.error" role="alert" class="shrink-0 bg-red-50 px-4 py-2 text-red-700">{{ ui.error }}</p>
 
     <div class="flex min-h-0 flex-1">
       <Sidebar />
-      <Canvas />
+      <template v-if="flash">
+        <FlashCanvas />
+        <FlashPanel />
+      </template>
+      <Canvas v-else />
     </div>
   </div>
 </template>

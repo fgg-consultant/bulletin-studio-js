@@ -6,7 +6,8 @@
  *  dates. Corriger la période d'un numéro les met donc à jour, comme le bloc « date du
  *  bulletin ». Les dates sont dans la langue de l'admin, comme le reste du studio. */
 import { siteTimeZone } from './api'
-import { addDays, formatDay, formatDayRange, formatMonth, t } from './i18n'
+import { formatDay, formatDayRange, formatMonth, t } from './i18n'
+import { periodNumber, previousPeriod } from './periods'
 import type { Cadence } from './types'
 
 export const FIELDS = ['start', 'end', 'period', 'previous', 'published', 'number'] as const
@@ -36,28 +37,9 @@ export function siteToday(): string {
 }
 
 /** une période dans la tournure de sa cadence : « 11–20 octobre 2026 », « octobre 2026 » */
-function span(start: string, end: string, cadence: Cadence): string {
+export function periodText(start: string, end: string, cadence: Cadence): string {
   if (end === start) return formatDay(start)
   return cadence === 'monthly' ? formatMonth(start) : formatDayRange(start, end)
-}
-
-/** la période d'avant, de même cadence : la décade écoulée dont un bulletin
- *  agrométéorologique fait le bilan avant les perspectives de la sienne */
-function previous(d: IssueDates): [string, string] {
-  const end = addDays(d.start, -1)
-  if (d.cadence === 'daily') return [end, end]
-  const day = Number(end.slice(8))
-  const first = d.cadence === 'monthly' || day <= 10 ? 1 : day <= 20 ? 11 : 21
-  return [`${end.slice(0, 8)}${String(first).padStart(2, '0')}`, end]
-}
-
-/** le rang de la période dans son année : décade 1–36, mois 1–12, jour 1–366 — le
- *  numéro que portent les bulletins décadaires (« N° 28 ») */
-function number(d: IssueDates): number {
-  const [y, m, day] = d.start.split('-').map(Number)
-  if (d.cadence === 'monthly') return m
-  if (d.cadence === 'dekadal') return (m - 1) * 3 + (day <= 10 ? 1 : day <= 20 ? 2 : 3)
-  return (Date.UTC(y, m - 1, day) - Date.UTC(y, 0, 1)) / 86_400_000 + 1
 }
 
 function value(field: Field, d: IssueDates): string {
@@ -69,11 +51,13 @@ function value(field: Field, d: IssueDates): string {
     case 'published':
       return formatDay(d.published)
     case 'period':
-      return span(d.start, d.end, d.cadence)
-    case 'previous':
-      return span(...previous(d), d.cadence)
+      return periodText(d.start, d.end, d.cadence)
+    case 'previous': {
+      const p = previousPeriod(d.cadence, d)
+      return periodText(p.start, p.end, d.cadence)
+    }
     case 'number':
-      return String(number(d))
+      return String(periodNumber(d.cadence, d.start))
   }
 }
 

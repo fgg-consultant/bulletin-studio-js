@@ -12,7 +12,8 @@ import { formatDay, t } from './i18n'
 import { esc } from './esc'
 import { nodes, theme } from './lexical'
 import { legendHtml, MAP_HEIGHTS } from './map'
-import type { Block, ForecastBlock } from './types'
+import type { Block, FlashShare, ForecastBlock } from './types'
+import { toHtml as whatsappHtml } from './whatsapp'
 
 /** Ce que le html doit au numéro et pas au document : un modèle n'en a pas. */
 export interface RenderContext {
@@ -139,4 +140,17 @@ function block(b: Block, ctx: RenderContext): string {
 
 export function renderHtml(blocks: Block[], ctx: RenderContext = {}): string {
   return blocks.map((b) => block(b, ctx)).join('')
+}
+
+/** Le html d'un flash : l'image publiée, telle qu'elle a été partagée, puis le texte du
+ *  post, sa mise en forme WhatsApp rendue (whatsapp.ts). Rien tant que le flash n'a pas
+ *  d'image : elle est capturée à la publication, et une page sans elle ne doit pas
+ *  partir en ligne. */
+export function renderFlashHtml(share: FlashShare | null, caption: string): string {
+  if (!share) return ''
+  const text = whatsappHtml(caption)
+  return [
+    `<figure class="bs-flash-image"><img src="${esc(share.src)}" alt="${esc(share.alt)}"></figure>`,
+    text ? `<div class="bs-text bs-flash-caption">${text}</div>` : '',
+  ].join('')
 }

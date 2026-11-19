@@ -73,6 +73,14 @@
 .bs-under-strike {
   text-decoration: underline line-through;
 }
+/* le code d'un texte au format WhatsApp (le post d'un flash) */
+.bs-code {
+  padding: 0 0.25em;
+  border-radius: 4px;
+  background: #f1f5f9;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
 
 /* ---- la page publiée ---- */
 .bs-doc {
@@ -204,6 +212,19 @@
   color: #64748b;
 }
 
+/* un flash publié : l'image telle qu'elle a été partagée, puis le texte du post */
+.bs-doc .bs-flash-image,
+.bs-doc .bs-flash-caption {
+  max-width: 540px;
+  margin: 1rem auto;
+}
+.bs-doc .bs-flash-image img {
+  display: block;
+  width: 100%;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0 1px #e2e8f0;
+}
+
 .bs-doc .bs-divider {
   margin: 0.75rem 0;
   border: 0;
@@ -241,6 +262,27 @@
 }
 .bs-doc .bs-map-block {
   margin: 1rem 0;
+}
+/* la carte et sa légende ; l'éditeur les enveloppe dans .bs-map-frame */
+.bs-map-block,
+.bs-map-frame {
+  position: relative;
+}
+/* la légende d'un service WMS est une image : posée dans le coin de la carte */
+.bs-legend-image {
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 1;
+  margin: 0;
+  padding: 0.25rem;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 0.85);
+}
+.bs-legend-image img {
+  display: block;
+  width: auto;
+  max-height: 8rem;
 }
 .bs-legend {
   display: flex;

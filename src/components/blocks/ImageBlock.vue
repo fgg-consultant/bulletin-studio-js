@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { Image as ImageIcon, Library, RefreshCw, Upload, X } from 'lucide-vue-next'
 import * as api from '../../api'
 import { t } from '../../i18n'
+import { ui } from '../../store'
 import type { ImageBlock } from '../../types'
 import FieldText from '../FieldText.vue'
 
 const props = defineProps<{ block: ImageBlock; selected: boolean }>()
+
+/** le fond d'un flash : ses réglages passent sous le carré (FlashCanvas.vue) */
+const backdrop = computed(() => ui.backdropId === props.block.id)
 
 const file = ref<HTMLInputElement | null>(null)
 const url = ref('')
@@ -124,34 +128,36 @@ async function browse() {
         class="mt-1.5 block text-center text-xs leading-relaxed text-slate-500 italic outline-none"
         @click.stop
       />
-      <div v-if="selected" class="mt-2 flex items-center gap-2" @click.stop>
-        <input
-          v-model="block.alt"
-          name="image-alt"
-          :aria-label="t('image.altLabel')"
-          :placeholder="t('image.alt')"
-          class="min-w-0 flex-1 rounded border border-slate-200 px-2 py-1 text-xs focus:outline-1 focus:outline-sky-600"
-        />
-        <button
-          class="flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-50"
-          :disabled="busy"
-          @click="file?.click()"
-        >
-          <RefreshCw :size="12" /> {{ busy ? t('image.uploading') : t('image.replace') }}
-        </button>
-        <button
-          class="flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100"
-          @click="browse"
-        >
-          <Library :size="12" /> {{ t('image.library') }}
-        </button>
-        <button
-          class="flex items-center gap-1 rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
-          @click="((block.src = null), (block.imageId = null))"
-        >
-          <X :size="12" /> {{ t('image.remove') }}
-        </button>
-      </div>
+      <Teleport defer to="#bs-flash-tools" :disabled="!backdrop">
+        <div v-if="selected" class="mt-2 flex items-center gap-2" @click.stop>
+          <input
+            v-model="block.alt"
+            name="image-alt"
+            :aria-label="t('image.altLabel')"
+            :placeholder="t('image.alt')"
+            class="min-w-0 flex-1 rounded border border-slate-200 px-2 py-1 text-xs focus:outline-1 focus:outline-sky-600"
+          />
+          <button
+            class="flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+            :disabled="busy"
+            @click="file?.click()"
+          >
+            <RefreshCw :size="12" /> {{ busy ? t('image.uploading') : t('image.replace') }}
+          </button>
+          <button
+            class="flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100"
+            @click="browse"
+          >
+            <Library :size="12" /> {{ t('image.library') }}
+          </button>
+          <button
+            class="flex items-center gap-1 rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+            @click="((block.src = null), (block.imageId = null))"
+          >
+            <X :size="12" /> {{ t('image.remove') }}
+          </button>
+        </div>
+      </Teleport>
     </figure>
 
     <div

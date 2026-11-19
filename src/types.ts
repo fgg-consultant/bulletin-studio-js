@@ -4,6 +4,20 @@ import type { Legend } from './map'
  *  11–20, 21–fin du mois) ou un mois — celle qui commence le jour où il est préparé */
 export type Cadence = 'daily' | 'dekadal' | 'monthly'
 
+/** ce que compose le studio : un bulletin (un document, imprimé en PDF) ou un flash
+ *  média (une image carrée pour les réseaux sociaux, et le texte de son post). Fixé à
+ *  la création du modèle ; ses numéros le reprennent. */
+export type Kind = 'bulletin' | 'flash'
+
+/** l'image d'un flash publié, telle que le studio l'a capturée et versée dans la
+ *  bibliothèque : celle que montre sa page et l'aperçu de son lien */
+export interface FlashShare {
+  imageId: number
+  src: string
+  /** le texte du visuel, pour qui ne voit pas l'image */
+  alt: string
+}
+
 export type BlockType =
   | 'header'
   | 'map'

@@ -1,6 +1,6 @@
 /** Client du store climweb. La page django hôte fournit les urls et le jeton CSRF
  *  par attributs data sur le point de montage. */
-import type { Block, Cadence, CitiesBlock, CityForecastRow } from './types'
+import type { Block, Cadence, CitiesBlock, CityForecastRow, FlashShare, Kind } from './types'
 
 const mount = document.getElementById('bulletin-studio-app')
 
@@ -26,6 +26,7 @@ const CSRF = mount?.dataset.csrfToken ?? ''
 export interface BulletinMeta {
   id: number
   title: string
+  kind: Kind
   isTemplate: boolean
   /** le premier jour de la période du numéro (« Effective from » de climweb), ISO */
   date: string | null
@@ -45,10 +46,31 @@ export interface BulletinMeta {
   hasUnpublishedChanges: boolean
   /** url publique, seulement une fois publié */
   url: string | null
+  /** un numéro : le modèle dont il est issu. null pour un modèle, pour une publication
+   *  faite sans modèle, et pour le numéro d'un modèle supprimé depuis */
+  template: { id: number; title: string } | null
+  /** la dernière publication, ms */
+  publishedAt: number | null
+  /** un numéro préparé par le brouillon automatique : quand, ms ; null s'il a été fait
+   *  à la main */
+  preparedAt: number | null
+  /** un modèle : le nombre de numéros qui en sont issus */
+  issueCount: number
+  /** un modèle dont les brouillons sont automatiques : le prochain, à l'heure du site
+   *  (`at`, YYYY-MM-DDTHH:MM), et la période qu'il couvrira */
+  nextDraft: { at: string; start: string; end: string } | null
+}
+
+/** le document tel que le studio le range : les blocs, et pour un flash le texte du
+ *  post et l'image de sa dernière publication */
+export interface StoredDoc {
+  blocks?: Block[]
+  caption?: string
+  share?: FlashShare | null
 }
 
 export interface BulletinFull extends BulletinMeta {
-  doc: { blocks?: Block[] }
+  doc: StoredDoc
 }
 
 export interface ProductPage {
@@ -72,14 +94,20 @@ async function call<T>(url: string, init: RequestInit = {}): Promise<T> {
 
 export interface BulletinPayload {
   title: string
-  doc: { blocks: Block[] }
+  doc: StoredDoc & { blocks: Block[] }
   html: string
   isTemplate: boolean
   /** un modèle seulement ; absents, le serveur n'y touche pas */
   cadence?: Cadence
   draftAt?: string | null
-  /** requis à la création uniquement */
+  /** l'image que montre un lien partagé (l'og:image de climweb), de la bibliothèque */
+  shareImage?: number | null
+  /** une publication sans modèle seulement : son jour (« Effective from »). Celle d'un
+   *  numéro suit la cadence de son modèle, le serveur la fixe */
+  date?: string | null
+  /** à la création uniquement : ensuite fixés */
   parent?: number
+  kind?: Kind
 }
 
 export const listProductPages = () => call<ProductPage[]>(PRODUCT_PAGES)
@@ -123,10 +151,13 @@ export interface StoredImage {
 export const listImages = (q = '') =>
   call<StoredImage[]>(IMAGES + (q ? `?q=${encodeURIComponent(q)}` : ''))
 
-export async function uploadImage(file: File): Promise<StoredImage> {
+/** `flash` : la capture d'un flash, rangée à part de la bibliothèque (hors du choix
+ *  d'images, comme les cartes de prévision) */
+export async function uploadImage(file: File, purpose?: 'flash'): Promise<StoredImage> {
   const body = new FormData()
   body.append('title', file.name.replace(/\.[^.]+$/, ''))
   body.append('file', file)
+  if (purpose) body.append('purpose', purpose)
   // pas de Content-Type ici : le navigateur doit poser lui-même la frontière multipart
   const res = await fetch(IMAGES, { method: 'POST', body, headers: { 'X-CSRFToken': CSRF } })
   if (!res.ok) await fail(res)
@@ -147,8 +178,23 @@ export interface GeoLayer {
   id: string
   name: string
   dataset: string
-  tileJsonUrl: string
-  legendConfig?: unknown
+  legendConfig?: { type?: string; items?: unknown[] } | null
+  /** couche raster de geomanager : son TileJSON donne ses tuiles et ses dates */
+  tileJsonUrl?: string
+  /** couche WMS (toutes celles du Data Helper) : le gabarit GetMap de geomanager,
+   *  `{bbox-epsg-3857}` et `{time}` compris, et de quoi lire ses dates (wms.ts) */
+  wms?: { tiles: string; capabilities: string; layer: string }
+}
+
+interface RawLayer {
+  id: string
+  name: string
+  layerType?: string
+  tileJsonUrl?: string
+  layerConfig?: { source?: { tiles?: string[] } }
+  getCapabilitiesUrl?: string
+  layerName?: string
+  legendConfig?: GeoLayer['legendConfig']
 }
 
 /** geomanager rend ses urls absolues à partir du Site wagtail, dont l'hôte et le
@@ -158,14 +204,26 @@ export const samePath = (url: string) =>
   // URL() échappe les accolades ; les gabarits {z}/{x}/{y} doivent rester lisibles
   new URL(url, location.origin).pathname.replace(/%7B/gi, '{').replace(/%7D/gi, '}')
 
-/** Les couches raster du catalogue geomanager, à plat. */
-export async function listLayers(datasetsUrl: string): Promise<GeoLayer[]> {
-  const datasets = await call<{ name?: string; layers?: GeoLayer[] }[]>(datasetsUrl)
-  return datasets.flatMap((d) =>
-    (d.layers ?? [])
-      .filter((l) => l.tileJsonUrl)
-      .map((l) => ({ ...l, dataset: d.name ?? '', tileJsonUrl: samePath(l.tileJsonUrl) })),
+/** Les couches du catalogue geomanager qu'une carte sait dessiner, à plat : raster
+ *  (tuiles de geomanager) et WMS (tuiles du service lui-même, url absolue : elles ne
+ *  sont pas sur le site). Ni vecteur ni frontières. Le catalogue pèse près d'un Mo :
+ *  lu une fois par session. */
+let layersOnce: Promise<GeoLayer[]> | null = null
+export function listLayers(datasetsUrl: string): Promise<GeoLayer[]> {
+  layersOnce ??= call<{ name?: string; layers?: RawLayer[] }[]>(datasetsUrl).then((datasets) =>
+    datasets.flatMap((d) =>
+      (d.layers ?? []).flatMap((l): GeoLayer[] => {
+        const base = { id: l.id, name: l.name, dataset: d.name ?? '', legendConfig: l.legendConfig }
+        if (l.tileJsonUrl) return [{ ...base, tileJsonUrl: samePath(l.tileJsonUrl) }]
+        const tiles = l.layerConfig?.source?.tiles?.[0]
+        if (l.layerType === 'wms' && tiles && l.getCapabilitiesUrl && l.layerName)
+          return [{ ...base, wms: { tiles, capabilities: l.getCapabilitiesUrl, layer: l.layerName } }]
+        return []
+      }),
+    ),
   )
+  layersOnce.catch(() => (layersOnce = null))
+  return layersOnce
 }
 
 export interface TileJson {

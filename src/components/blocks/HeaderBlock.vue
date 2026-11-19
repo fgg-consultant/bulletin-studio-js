@@ -3,11 +3,15 @@ import { computed, ref } from 'vue'
 import { CalendarPlus, Plus, X } from 'lucide-vue-next'
 import { FIELDS, fieldLabel, type Field } from '../../fields'
 import { t } from '../../i18n'
-import { uid } from '../../store'
+import { doc, uid } from '../../store'
 import type { HeaderBlock } from '../../types'
 import FieldText from '../FieldText.vue'
 
 const props = defineProps<{ block: HeaderBlock; selected: boolean }>()
+
+/** dans un flash, chaque ligne compte : un sous-titre ou des badges laissés vides ne
+ *  gardent leur place que le temps de les remplir */
+const compact = computed(() => doc.kind === 'flash' && !props.selected)
 
 const swatches = ['#175243', '#0c4a6e', '#1e293b', '#7f1d1d', '#b45309', '#f1f5f9']
 
@@ -49,18 +53,19 @@ function insert(field: Field) {
       v-model="block.title"
       tag="h1"
       :placeholder="t('header.title')"
-      class="mt-4 text-4xl leading-tight font-extrabold tracking-tight text-inherit outline-none"
+      class="bs-header-title mt-4 text-4xl leading-tight font-extrabold tracking-tight text-inherit outline-none"
     />
 
     <FieldText
+      v-show="!compact || block.subtitle.trim()"
       v-model="block.subtitle"
       tag="p"
       :placeholder="t('header.subtitle')"
-      class="mt-4 max-w-2xl text-base leading-relaxed outline-none"
+      class="bs-header-sub mt-4 max-w-2xl text-base leading-relaxed outline-none"
       :class="dark ? 'text-white/85' : 'text-slate-700'"
     />
 
-    <div class="mt-6 flex flex-wrap items-center gap-2">
+    <div v-show="!compact || block.badges.length" class="bs-badges mt-6 flex flex-wrap items-center gap-2">
       <span
         v-for="badge in block.badges"
         :key="badge.id"

@@ -4,10 +4,13 @@ import { CloudSun, RefreshCw } from 'lucide-vue-next'
 import * as api from '../../api'
 import { addDays, formatDateTime, formatDay, t } from '../../i18n'
 import { forecastAlt } from '../../render'
-import { doc, pastePlain } from '../../store'
+import { doc, pastePlain, ui } from '../../store'
 import type { ForecastBlock } from '../../types'
 
 const props = defineProps<{ block: ForecastBlock; selected: boolean }>()
+
+/** le fond d'un flash : ses réglages passent sous le carré (FlashCanvas.vue) */
+const backdrop = computed(() => ui.backdropId === props.block.id)
 
 const options = shallowRef<api.ForecastOptions | null>(null)
 const busy = ref(false)
@@ -109,7 +112,7 @@ watch(
         <!-- en bas : le haut de la carte porte son propre titre -->
         <span
           v-if="doc.isTemplate"
-          class="absolute right-2 bottom-2 rounded bg-amber-50/95 px-2 py-0.5 text-xs font-medium text-amber-800 shadow-sm"
+          class="bs-forecast-preview absolute right-2 bottom-2 rounded bg-amber-50/95 px-2 py-0.5 text-xs font-medium text-amber-800 shadow-sm"
         >
           {{ t('forecast.preview', { date: formatDay(target) }) }}
         </span>
@@ -147,54 +150,56 @@ watch(
       </template>
     </div>
 
-    <div v-if="selected && options" class="mt-2 flex flex-wrap items-center gap-2" @click.stop>
-      <select
-        v-if="options.periods.length > 1"
-        :value="period"
-        :aria-label="t('forecast.period')"
-        class="rounded border border-slate-200 py-1 ps-2 pe-7 text-xs focus:outline-1 focus:outline-sky-600"
-        @change="setRecipe({ period: ($event.target as HTMLSelectElement).value })"
-      >
-        <option v-for="p in options.periods" :key="p.time" :value="p.time">{{ p.label }}</option>
-      </select>
-      <select
-        :value="block.dayOffset"
-        :aria-label="t('forecast.day')"
-        class="rounded border border-slate-200 py-1 ps-2 pe-7 text-xs focus:outline-1 focus:outline-sky-600"
-        @change="setRecipe({ dayOffset: Number(($event.target as HTMLSelectElement).value) })"
-      >
-        <option v-for="n in days" :key="n" :value="n">{{ dayLabel(n) }}</option>
-      </select>
-      <template v-if="!doc.isTemplate && block.src">
-        <span class="text-xs text-slate-500">
-          {{ t('forecast.frozen', { date: formatDay(block.date), period: block.periodLabel }) }}
-        </span>
-        <input
-          v-model="block.alt"
-          name="forecast-alt"
-          :aria-label="t('image.altLabel')"
-          :placeholder="t('image.alt')"
-          class="min-w-0 flex-1 rounded border border-slate-200 px-2 py-1 text-xs focus:outline-1 focus:outline-sky-600"
-        />
-      </template>
-      <span v-else-if="doc.isTemplate" class="text-xs text-slate-500">{{ t('forecast.templateHint') }}</span>
-    </div>
+    <Teleport defer to="#bs-flash-tools" :disabled="!backdrop">
+      <div v-if="selected && options" class="mt-2 flex flex-wrap items-center gap-2" @click.stop>
+        <select
+          v-if="options.periods.length > 1"
+          :value="period"
+          :aria-label="t('forecast.period')"
+          class="rounded border border-slate-200 py-1 ps-2 pe-7 text-xs focus:outline-1 focus:outline-sky-600"
+          @change="setRecipe({ period: ($event.target as HTMLSelectElement).value })"
+        >
+          <option v-for="p in options.periods" :key="p.time" :value="p.time">{{ p.label }}</option>
+        </select>
+        <select
+          :value="block.dayOffset"
+          :aria-label="t('forecast.day')"
+          class="rounded border border-slate-200 py-1 ps-2 pe-7 text-xs focus:outline-1 focus:outline-sky-600"
+          @change="setRecipe({ dayOffset: Number(($event.target as HTMLSelectElement).value) })"
+        >
+          <option v-for="n in days" :key="n" :value="n">{{ dayLabel(n) }}</option>
+        </select>
+        <template v-if="!doc.isTemplate && block.src">
+          <span class="text-xs text-slate-500">
+            {{ t('forecast.frozen', { date: formatDay(block.date), period: block.periodLabel }) }}
+          </span>
+          <input
+            v-model="block.alt"
+            name="forecast-alt"
+            :aria-label="t('image.altLabel')"
+            :placeholder="t('image.alt')"
+            class="min-w-0 flex-1 rounded border border-slate-200 px-2 py-1 text-xs focus:outline-1 focus:outline-sky-600"
+          />
+        </template>
+        <span v-else-if="doc.isTemplate" class="text-xs text-slate-500">{{ t('forecast.templateHint') }}</span>
+      </div>
 
-    <div
-      v-if="newer"
-      class="mt-2 flex flex-wrap items-center gap-2 rounded-md bg-sky-50 px-3 py-1.5 text-xs text-sky-800 print:hidden"
-      @click.stop
-    >
-      {{ t('forecast.newer', { time: formatDateTime(newer.renderedAt) }) }}
-      <button
-        class="flex items-center gap-1 rounded bg-white px-2 py-0.5 font-medium text-sky-700 shadow-sm ring-1 ring-sky-200 hover:bg-sky-100 disabled:opacity-50"
-        :disabled="busy"
-        @click="freeze"
+      <div
+        v-if="newer"
+        class="mt-2 flex flex-wrap items-center gap-2 rounded-md bg-sky-50 px-3 py-1.5 text-xs text-sky-800 print:hidden"
+        @click.stop
       >
-        <RefreshCw :size="12" /> {{ t('forecast.refresh') }}
-      </button>
-    </div>
+        {{ t('forecast.newer', { time: formatDateTime(newer.renderedAt) }) }}
+        <button
+          class="flex items-center gap-1 rounded bg-white px-2 py-0.5 font-medium text-sky-700 shadow-sm ring-1 ring-sky-200 hover:bg-sky-100 disabled:opacity-50"
+          :disabled="busy"
+          @click="freeze"
+        >
+          <RefreshCw :size="12" /> {{ t('forecast.refresh') }}
+        </button>
+      </div>
 
-    <p v-if="error" class="mt-1 text-xs text-red-600">{{ error }}</p>
+      <p v-if="error" class="mt-1 text-xs text-red-600">{{ error }}</p>
+    </Teleport>
   </div>
 </template>

@@ -18,6 +18,64 @@ body,
   height: 100%;
 }
 
+/* ---- les pages du studio : boutons, pastilles, cartes ----
+   Hors couche, comme les utilitaires : une règle de wagtail sur `a` ou `button` ne
+   doit pas l'emporter. Ne pas les combiner avec un utilitaire qui touche aux mêmes
+   propriétés : à spécificité égale, l'ordre du fichier décide. */
+.bs-btn {
+  @apply inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-transparent px-3.5 font-semibold whitespace-nowrap;
+}
+.bs-btn:disabled {
+  @apply cursor-default opacity-50;
+}
+.bs-btn:focus-visible,
+.bs-focus:focus-visible {
+  @apply outline-2 outline-offset-2 outline-sky-600;
+}
+.bs-btn-primary {
+  @apply bg-sky-700 text-white;
+}
+.bs-btn-primary:not(:disabled):hover {
+  @apply bg-sky-800 text-white;
+}
+.bs-btn-outline {
+  @apply border-sky-700 bg-white text-sky-700;
+}
+.bs-btn-outline:not(:disabled):hover {
+  @apply bg-sky-50 text-sky-800;
+}
+.bs-btn-secondary {
+  @apply border-slate-300 bg-white font-medium text-slate-700;
+}
+.bs-btn-secondary:not(:disabled):hover {
+  @apply bg-slate-50 text-slate-900;
+}
+.bs-btn-icon {
+  @apply min-w-10 px-0 font-medium text-slate-500;
+}
+.bs-btn-icon:not(:disabled):hover {
+  @apply bg-slate-100 text-slate-800;
+}
+.bs-btn-danger:not(:disabled):hover {
+  @apply bg-red-50 text-red-700;
+}
+.bs-pill {
+  @apply inline-block rounded-full px-[9px] py-0.5 text-xs font-medium whitespace-nowrap;
+}
+.bs-card {
+  @apply rounded-xl border border-slate-200 bg-white;
+}
+/* les champs des pages et de la fenêtre « Nouvelle publication » : wagtail dessine ses
+   propres select et input, plus hauts et plus spécifiques qu'une classe. Le début se
+   règle par --bs-input-start (la place d'une icône), aucun utilitaire ne passerait */
+.bs-input {
+  @apply min-h-10! w-full rounded-lg! border! border-slate-300! bg-white! py-0! pe-2.5! text-sm! text-slate-800!;
+  padding-inline-start: var(--bs-input-start, 0.625rem) !important;
+}
+.bs-input:focus-visible {
+  @apply outline-2 outline-sky-600;
+}
+
 [contenteditable]:focus {
   outline: none;
 }
@@ -155,6 +213,342 @@ body,
 }
 .bs-mode-mobile .bs-cols > * {
   flex-basis: 100%;
+}
+
+/* ---- flash média (FlashCanvas.vue) ----
+   Un carré de 540 px à l'écran, exporté à 1080 px (share.ts) : les tailles sont celles
+   d'un téléphone qui affiche l'image en pleine largeur. Les cartes et les images
+   prennent la hauteur que le texte leur laisse, jusqu'à un minimum ; ce qui ne tient
+   plus sort du cadre, et le studio le signale. Une carte ou une image remplie fait le
+   fond du carré entier (.bs-flash-full, plus bas). */
+.bs-flash {
+  position: relative;
+  /* les z-index du carré restent entre ses blocs, sous les menus de l'éditeur */
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: #334155;
+  box-shadow: 0 8px 30px rgba(2, 8, 23, 0.12);
+}
+/* l'identité de l'organisation : une signature, pas un en-tête ; sur blanc, même
+   au-dessus d'une carte */
+.bs-flash-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+}
+.bs-flash-logo {
+  height: 18px;
+  width: auto;
+  max-width: 30%;
+  object-fit: contain;
+}
+.bs-flash-org {
+  flex: 1;
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #1e293b;
+}
+.bs-flash-flag {
+  max-height: 13px;
+  max-width: 22px;
+  width: auto;
+  height: auto;
+  margin-inline-start: auto;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgb(15 23 42 / 0.12);
+}
+.bs-flash-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px 8px;
+}
+.bs-flash-blocks {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* sans bandeau en tête, les blocs ne touchent pas l'identité de l'organisation */
+.bs-flash-blocks > :first-child:not([data-block-type='header']) {
+  margin-top: 8px;
+}
+.bs-flash-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 16px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* le bandeau, bord à bord et resserré : sur un carré, chaque ligne compte */
+.bs-flash-blocks > [data-block-type='header'] {
+  padding: 0;
+  margin-inline: -12px;
+}
+.bs-flash .bs-header {
+  padding: 16px 22px 18px;
+  border-radius: 0;
+}
+/* margin entière : core.css de wagtail donne aux h1 une marge basse, hors couche */
+.bs-flash .bs-header-title {
+  margin: 6px 0 0;
+  font-size: 30px;
+  line-height: 1.1;
+}
+.bs-flash .bs-header-sub {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.bs-flash .bs-badges {
+  margin-top: 10px;
+}
+
+/* cartes et images : elles s'étirent dans la hauteur qui reste ; une image s'y loge
+   entière, sans être rognée. Seulement une fois remplies : un bloc encore vide garde
+   la taille de son invite, et disparaît de l'image exportée */
+.bs-flash-blocks > :is([data-block-type='map'], [data-block-type='forecast'], [data-block-type='image']):has(.bs-map, img),
+.bs-flash-blocks > :is([data-block-type='map'], [data-block-type='forecast'], [data-block-type='image']):has(.bs-map, img) > div:not(.bs-block-tools),
+.bs-flash-blocks > :is([data-block-type='forecast'], [data-block-type='image']) figure {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+.bs-flash .bs-map-frame {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.bs-flash .bs-map,
+.bs-flash-blocks > [data-block-type='forecast'] figure > div,
+.bs-flash-blocks > [data-block-type='image'] figure > img {
+  flex: 1 1 0;
+  min-height: 140px;
+}
+.bs-flash-blocks > :is([data-block-type='forecast'], [data-block-type='image']) figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ---- un fond sur tout le carré (FlashCanvas.vue) ----
+   La première carte ou image remplie ([data-backdrop]) prend tout le carré sous la barre
+   de l'identité, qui garde son fond blanc : un logo ne se lit pas sur n'importe quelle
+   carte. Le reste se pose sur le fond : le pied sur fond transparent, les blocs d'avant
+   le fond en haut, ceux d'après en bas, sur des cartons. Le pied porte un halo clair : il
+   se lit sur une carte claire comme sur une image satellite sombre. Le fond n'a pas de
+   z-index : ses commandes (zoom, outils du bloc) passent au-dessus des cartons. */
+.bs-flash-full .bs-flash-foot {
+  color: #0f172a;
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px rgb(255 255 255 / 0.8);
+}
+.bs-flash-full .bs-flash-body {
+  padding: 12px 12px 28px;
+}
+.bs-flash-full .bs-flash-blocks {
+  gap: 8px;
+  /* entre les cartons, la carte se déplace */
+  pointer-events: none;
+}
+.bs-flash-full .bs-flash-blocks > * {
+  pointer-events: auto;
+}
+.bs-flash-full .bs-flash-blocks > [data-backdrop] {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+}
+.bs-flash-full .bs-flash-blocks > :not([data-backdrop]) {
+  z-index: 1;
+  margin: 0;
+}
+/* ce qui suit le fond descend en bas du carré */
+.bs-flash-full .bs-flash-blocks > [data-backdrop] + * {
+  margin-top: auto;
+}
+.bs-flash-full .bs-flash-blocks > :not([data-backdrop], [data-block-type='header']) {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.93);
+  box-shadow: 0 4px 14px rgb(2 8 23 / 0.18);
+}
+.bs-flash-full .bs-header {
+  padding: 12px 16px 14px;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgb(2 8 23 / 0.25);
+}
+.bs-flash-full .bs-header-title {
+  font-size: 26px;
+}
+.bs-flash-full .bs-flash-foot {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 3;
+  padding: 5px 12px;
+  border: 0;
+  font-size: 10px;
+  pointer-events: none;
+}
+/* le fond lui-même : une carte bord à bord, une photo recadrée, une carte de prévision
+   entière (son fond blanc continue celui du carré) */
+.bs-flash-full [data-backdrop] .bs-map {
+  border-radius: 0;
+}
+.bs-flash-full [data-backdrop] figure img {
+  border-radius: 0;
+}
+.bs-flash-full [data-backdrop][data-block-type='image'] figure img {
+  object-fit: cover;
+}
+/* une légende de photo ne se lit pas sous les cartons : le texte du flash dit le reste */
+.bs-flash-full [data-backdrop] figcaption {
+  display: none;
+}
+/* le zoom à droite, au milieu du carré, à l'écart des cartons du haut et du bas ;
+   l'aperçu d'une carte de prévision de modèle aussi. Pas de légende sur l'image
+   (MapBlock.vue) */
+.bs-flash-full [data-backdrop] .maplibregl-ctrl-top-right,
+.bs-flash-full [data-backdrop] .bs-forecast-preview {
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+/* le crédit du fond de carte est au pied du carré */
+.bs-flash .maplibregl-ctrl-bottom-right,
+.bs-flash .maplibregl-ctrl-bottom-left {
+  display: none;
+}
+/* ses outils (déplacer, dupliquer, supprimer) : dans le carré, au-dessus du zoom ; en
+   haut, on les prendrait pour ceux du bandeau */
+.bs-flash-full [data-backdrop] > .bs-block-tools {
+  top: calc(50% - 72px);
+}
+
+/* les réglages du fond, sous le carré (Teleport des blocs carte, image, prévision) */
+.bs-flash-tools {
+  display: flex;
+  width: 540px;
+  flex-direction: column;
+  gap: 6px;
+}
+.bs-flash-tools:empty {
+  display: none;
+}
+.bs-flash-tools > * {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(2 8 23 / 0.12);
+}
+
+/* l'état de la couche d'une carte (MapBlock.vue) : éditeur seulement */
+.bs-map-state {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  max-width: 80%;
+  margin: 0;
+  padding: 4px 10px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.92);
+  box-shadow: 0 1px 4px rgb(2 8 23 / 0.2);
+  font-size: 12px;
+  text-align: center;
+  color: #334155;
+  pointer-events: none;
+}
+.bs-map-state-error {
+  color: #b91c1c;
+}
+
+/* le texte du post d'un flash (CaptionEditor.vue) : une ligne par paragraphe, comme
+   dans WhatsApp ; une ligne vide aère */
+.bs-caption {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #1e293b;
+  overflow-wrap: anywhere;
+}
+.bs-caption-p {
+  margin: 0;
+}
+/* le cadre de l'éditeur marque déjà le focus : pas le contour de wagtail en plus (son
+   :focus-visible est !important) */
+.bs-caption:focus-visible {
+  outline: none !important;
+}
+/* le sélecteur d'emojis (emoji.ts) : un web component, réglé par ses variables. Neuf
+   colonnes, la rangée des favoris en montre neuf (la météo, au départ) */
+.bs-emoji-picker {
+  width: 21rem;
+  height: 23rem;
+  --num-columns: 9;
+  --emoji-size: 1.375rem;
+  --emoji-padding: 0.375rem;
+  --category-emoji-size: 1.125rem;
+  --border-radius: 0.75rem;
+  --border-color: #e2e8f0;
+  --indicator-color: #0369a1;
+  --outline-color: #0284c7;
+  --input-border-color: #cbd5e1;
+  --input-border-radius: 0.375rem;
+  --input-font-size: 0.875rem;
+  --input-padding: 0.375rem 0.5rem;
+  --input-placeholder-color: #94a3b8;
+  --button-hover-background: #f1f5f9;
+  --button-active-background: #e0f2fe;
+}
+
+/* ---- capture d'un flash (share.ts) : l'image, sans le chrome d'édition ---- */
+.bs-capturing {
+  overflow: hidden;
+  box-shadow: none;
+}
+.bs-capturing *,
+.bs-capturing *::before,
+.bs-capturing *::after {
+  transition: none !important;
+  animation: none !important;
+}
+.bs-capturing .print\:hidden,
+.bs-capturing .bs-placeholder,
+.bs-capturing .bs-forecast-preview,
+.bs-capturing .maplibregl-control-container,
+.bs-capturing .bs-flash-blocks > :is([data-block-type='map'], [data-block-type='forecast'], [data-block-type='image']):not(:has(.bs-map, img)) {
+  display: none !important;
+}
+.bs-capturing [contenteditable][data-placeholder]:empty::before,
+.bs-capturing .bs-empty-col::after {
+  content: none;
+}
+.bs-capturing .bs-empty-col {
+  border: none;
 }
 
 /* ---- export PDF (impression native) : rendu « pdf », chrome d'édition masqué ----
