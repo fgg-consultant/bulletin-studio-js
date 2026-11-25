@@ -1,12 +1,41 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
+
+/**
+ * Aucun morceau ne doit importer une entrée. Le gabarit django charge les entrées sous
+ * une autre url que leur nom (`?v=` en dev, nom haché par ManifestStaticFilesStorage en
+ * production) ; l'import relatif d'un morceau (`./bulletin-studio.js`) en ferait un
+ * second exemplaire, qui monte une seconde app dans le même conteneur et efface la
+ * première — l'éditeur devient blanc, sans une erreur. Or un module partagé entre une
+ * entrée et un morceau chargé à la demande reste dans l'entrée : le build échoue donc
+ * ici plutôt que l'éditeur chez un forecaster.
+ */
+function noChunkImportsAnEntry(): Plugin {
+  return {
+    name: 'bulletin-studio:no-chunk-imports-an-entry',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      const chunks = Object.values(bundle).filter((f) => f.type === 'chunk')
+      const entries = new Set(chunks.filter((c) => c.isEntry).map((c) => c.fileName))
+      for (const chunk of chunks) {
+        const found = [...new Set([...chunk.imports, ...chunk.dynamicImports])].filter((f) => entries.has(f))
+        if (found.length)
+          this.error(
+            `${chunk.fileName} imports the entry ${found.join(', ')}: the page loads entries ` +
+              'under another url, so the browser would run a second copy of it. Import the ' +
+              'module statically, or move what it shares with the entry out of it.',
+          )
+      }
+    },
+  }
+}
 
 export default defineConfig({
   // chemins relatifs : l'app fonctionne servie depuis n'importe quel sous-chemin
   // (GitHub Pages, /static/… de django)
   base: './',
-  plugins: [vue(), tailwindcss()],
+  plugins: [vue(), tailwindcss(), noChunkImportsAnEntry()],
   // port fixe : la page django qui charge l'app en dev pointe dessus
   // (BULLETIN_STUDIO_DEV_SERVER=http://localhost:5180). strictPort pour échouer
   // franchement au lieu de glisser sur 5181 et laisser django pointer dans le vide.

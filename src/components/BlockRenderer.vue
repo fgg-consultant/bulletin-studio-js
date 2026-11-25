@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, type Component } from 'vue'
+import { computed, type Component } from 'vue'
 import { Copy, GripVertical, Trash2 } from 'lucide-vue-next'
 import { t } from '../i18n'
 import { duplicateBlock, removeBlock, ui } from '../store'
 import type { Block } from '../types'
 import ButtonBlock from './blocks/ButtonBlock.vue'
 import CitiesBlock from './blocks/CitiesBlock.vue'
+// récursif : ColumnsBlock rend ses blocs avec BlockRenderer. Sans risque en import
+// statique, chacun ne sert l'autre qu'au rendu ; surtout pas en import async, dont le
+// morceau importerait l'entrée (vite.config.ts, noChunkImportsAnEntry).
+import ColumnsBlock from './blocks/ColumnsBlock.vue'
 import DateBlock from './blocks/DateBlock.vue'
 import DividerBlock from './blocks/DividerBlock.vue'
 import ForecastBlock from './blocks/ForecastBlock.vue'
@@ -15,9 +19,6 @@ import MapBlock from './blocks/MapBlock.vue'
 import SpacerBlock from './blocks/SpacerBlock.vue'
 import TableBlock from './blocks/TableBlock.vue'
 import TextBlock from './blocks/TextBlock.vue'
-
-// import async : ColumnsBlock ré-importe BlockRenderer (récursif)
-const ColumnsBlock = defineAsyncComponent(() => import('./blocks/ColumnsBlock.vue'))
 
 const props = defineProps<{ block: Block }>()
 

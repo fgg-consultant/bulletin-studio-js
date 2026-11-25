@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue'
 import draggable from 'vuedraggable'
 import type { ColumnsBlock } from '../../types'
-
-// import async : BlockRenderer ré-importe ColumnsBlock (récursif)
-const BlockRenderer = defineAsyncComponent(() => import('../BlockRenderer.vue'))
+// récursif : BlockRenderer rend ce bloc (voir là-bas)
+import BlockRenderer from '../BlockRenderer.vue'
 
 defineProps<{ block: ColumnsBlock; selected: boolean }>()
 
